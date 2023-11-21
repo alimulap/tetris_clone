@@ -7,6 +7,7 @@ mod tetromino;
 mod state;
 mod constants;
 mod utils;
+mod types;
 
 fn main() {
     App::new()

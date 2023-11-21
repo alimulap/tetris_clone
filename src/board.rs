@@ -7,7 +7,7 @@ use bevy::{prelude::*, sprite::Anchor};
 use crate::{
     constants::{BOARD_INNER_SIZE, BOARD_OUTER_SIZE, BOARD_POSITION},
     state::AppState,
-    tetromino::{self, Tetromino},
+    tetromino::{self, Tetromino}, types::Position,
 };
 
 #[derive(Component)]
@@ -63,15 +63,6 @@ pub fn setup(
     );
 }
 
-pub fn topleft() -> Vec2 {
-    let board_position = BOARD_POSITION / 4.;
-    let board_inner_size = BOARD_INNER_SIZE / 4.;
-    Vec2::new(
-        board_position.x - board_inner_size.x / 2.,
-        board_position.y + board_inner_size.y / 2.,
-    )
-}
-
 #[derive(Resource)]
 pub struct BlocksInBoard(Vec<Vec<u8>>);
 
@@ -92,13 +83,13 @@ impl DerefMut for BlocksInBoard {
 pub fn valid_in_board(
     blocks_in_board: &BlocksInBoard,
     layout: &Vec<Vec<u8>>,
-    pos: &(i32, i32),
+    pos: &Position,
 ) -> bool {
     for (y, row) in layout.iter().enumerate() {
         for (x, block) in row.iter().enumerate() {
             if *block == 1 {
-                let x = x as i32 + pos.0;
-                let y = y as i32 + pos.1;
+                let x = x as i32 + pos.x;
+                let y = y as i32 + pos.y;
                 println!("x: {}, y: {}", x, y);
 
                 if x < 0
