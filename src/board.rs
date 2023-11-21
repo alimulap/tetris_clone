@@ -28,17 +28,11 @@ pub fn setup(
     blocks_in_board: Res<BlocksInBoard>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-    commands.spawn(Camera2dBundle::default());
-
-    let texture = asset_server.load("board.png");
-
-    println!("board_position: {:?}", BOARD_POSITION);
-
     let board = commands
         .spawn((
             Board,
             SpriteBundle {
-                texture,
+                texture: asset_server.load("board.png"),
                 transform: Transform {
                     translation: BOARD_POSITION.extend(0.0),
                     ..Default::default()
@@ -90,7 +84,6 @@ pub fn valid_in_board(
             if *block == 1 {
                 let x = x as i32 + pos.x;
                 let y = y as i32 + pos.y;
-                println!("x: {}, y: {}", x, y);
 
                 if x < 0
                     || x >= 10
@@ -106,3 +99,4 @@ pub fn valid_in_board(
 
     return true;
 }
+

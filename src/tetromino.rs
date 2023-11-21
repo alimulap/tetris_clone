@@ -71,7 +71,6 @@ pub fn spawn_tetromino(
         -BOARD_BORDER_THICKNESS - TETROMINO_SIZE.y * pos.y as f32,
         0.,
     );
-    println!("tetromino_position: {:?}", tetromino_position);
 
     let tetromino = commands
         .spawn((
