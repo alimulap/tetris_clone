@@ -1,11 +1,11 @@
 #![allow(unused)]
 
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
-    board::{self, BlocksInBoard},
-    constants::{BOARD_POSITION, TETROMINO_SIZE},
-    utils::LayoutParse,
+    board::{self, BlocksInBoard, Board},
+    constants::{BOARD_POSITION, TETROMINO_SIZE, BOARD_BORDER_THICKNESS},
+    utils::LayoutParse, state::AppState,
 };
 
 pub struct TetrominoPlugin;
@@ -28,17 +28,22 @@ pub enum Tetromino {
 #[derive(Component)]
 pub struct Block;
 
-pub fn setup(_commands: &mut Commands, _asset_server: Res<AssetServer>) {}
+#[derive(Component)]
+pub struct TetrominoPosition(pub [i8; 2]);
+
+pub fn _setup(_commands: &mut Commands, _asset_server: Res<AssetServer>) {}
 
 pub fn spawn_tetromino(
     tetromino: Tetromino,
     blocks_in_board: &BlocksInBoard,
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
+    board: Entity,
+    mut next_state: ResMut<NextState<AppState>>,
 ) {
+    let asd = TetrominoPosition([0, 0]);
     let texture = asset_server.load("tetromino.png");
 
-    let board_topleft = board::topleft();
     let pos = match tetromino {
         Tetromino::O => (4,  0),
         Tetromino::I => (3, -1),
@@ -55,56 +60,63 @@ pub fn spawn_tetromino(
     };
 
     if !board::valid_in_board(blocks_in_board, &layout, &pos) {
-        println!("Game Over!"); //lmao
+        next_state.set(AppState::GameOver);
         return;
     }
 
-    commands
+    let tetromino_position = Vec3::new(
+        BOARD_BORDER_THICKNESS + TETROMINO_SIZE.x * pos.0 as f32,
+        -BOARD_BORDER_THICKNESS - TETROMINO_SIZE.y * pos.1 as f32,
+        0.,
+    );
+    println!("tetromino_position: {:?}", tetromino_position);
+
+    let tetromino = commands
         .spawn((
             tetromino,
-            TransformBundle::default(),
+            TransformBundle {
+                local: Transform::from_translation(tetromino_position),
+                global: GlobalTransform::default()
+            },
             VisibilityBundle::default(),
         ))
         .with_children(|parent| {
-            println!("Tetromino");
             for (y, row) in layout.iter().enumerate() {
                 for (x, block) in row.iter().enumerate() {
                     if *block == 1 {
                         spawn_block(
                             parent,
                             texture.clone(),
-                            &board_topleft,
-                            &pos,
                             x as f32,
                             y as f32,
                         );
                     }
                 }
             }
-        });
+        }).id();
+
+    commands.entity(board).add_child(tetromino);
 }
+
 pub fn spawn_block(
     parent: &mut ChildBuilder,
     texture: Handle<Image>,
-    board_topleft: &Vec2,
-    pos: &(i32, i32),
     x: f32,
     y: f32,
 ) {
-    println!("Block");
-    let tetromino_size = TETROMINO_SIZE / 4.;
-    let pos_x = board_topleft.x + (pos.0 as f32 + x + 0.5) * tetromino_size.x;
-    let pos_y = board_topleft.y - (pos.1 as f32 + y + 0.5) * tetromino_size.y;
+    let pos_x = x * TETROMINO_SIZE.x;
+    let pos_y = y * TETROMINO_SIZE.y;
     println!("pos_x: {}, pos_y: {}", pos_x, pos_y);
 
     parent.spawn((
         Block,
         SpriteBundle {
             sprite: Sprite {
-                custom_size: Some(tetromino_size),
+                custom_size: Some(TETROMINO_SIZE),
+                anchor: Anchor::TopLeft,
                 ..Default::default()
             },
-            transform: Transform::from_translation(Vec3::new(pos_x, pos_y, 0.0)),
+            transform: Transform::from_translation(Vec3::new(pos_x, -pos_y, 0.0)),
             texture,
             ..Default::default()
         },
