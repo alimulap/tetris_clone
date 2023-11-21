@@ -87,8 +87,18 @@ struct StartGameButton;
 fn on_click_start_game(
     mut next_state: ResMut<NextState<AppState>>,
     start_button: Query<&Interaction, With<StartGameButton>>,
+    mut window: Query<&mut Window>,
 ) {
-    if start_button.single().eq(&Interaction::Pressed) {
+    let start_button = start_button.single();
+    let mut window = window.single_mut();
+
+    if start_button.eq(&Interaction::Hovered) {
+        window.cursor.icon = CursorIcon::Hand;
+    } else {
+        window.cursor.icon = CursorIcon::Default;
+    }
+
+    if start_button.eq(&Interaction::Pressed) {
         next_state.set(AppState::Game);
     }
 }
