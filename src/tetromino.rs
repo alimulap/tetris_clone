@@ -45,10 +45,10 @@ pub fn spawn_tetromino(
 ) {
     let texture = asset_server.load("tetromino.png");
 
-    let pos = match tetromino {
-        Tetromino::O => Position::new(4, 0),
-        Tetromino::I => Position::new(3, -1),
-        _ => Position::new(3, 0),
+    let pos = if let Tetromino::O = tetromino {
+        Position::new(4, 0)
+    } else {
+        Position::new(3, 0)
     };
     let index = IndexLayout(0);
     let layout: Vec<Vec<u8>> = match tetromino {
