@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bevy::prelude::*;
 
 use crate::components::{
@@ -33,12 +31,40 @@ struct MoveTimer(Timer);
 #[derive(Resource)]
 struct DropTimer(Timer);
 
+#[derive(Resource)]
+struct HoldTimer(Timer);
+
+#[derive(Resource)]
+struct PressedTimer(Timer);
+
+#[derive(Resource)]
+struct IsHolding(bool);
+
+#[allow(unused)]
+#[derive(Resource)]
+struct KeyHolds {
+    left: bool,
+    right: bool,
+    down: bool,
+    up: bool,
+    space: bool,
+}
+
 fn setup(mut commands: Commands) {
-    let mut drop_timer = Timer::from_seconds(5.5, TimerMode::Once);
-    drop_timer.set_elapsed(Duration::from_secs_f32(12.5));
-    //drop_timer.
+    commands.insert_resource(HoldTimer(Timer::from_seconds(0.15, TimerMode::Repeating)));
+    commands.insert_resource(PressedTimer(Timer::from_seconds(0.05, TimerMode::Repeating)));
     commands.insert_resource(MoveTimer(Timer::from_seconds(1.2, TimerMode::Repeating)));
+    let mut drop_timer = Timer::from_seconds(0.5, TimerMode::Once);
+    drop_timer.pause();
     commands.insert_resource(DropTimer(drop_timer));
+    commands.insert_resource(IsHolding(false));
+    commands.insert_resource(KeyHolds {
+        left: false,
+        right: false,
+        down: false,
+        up: false,
+        space: false,
+    });
 }
 
 fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>>) {
@@ -62,15 +88,62 @@ fn move_timer(
     }
 }
 
-fn input_handler(keyboard_input: Res<Input<KeyCode>>, mut direction: ResMut<MoveDirection>) {
-    if *direction != MoveDirection::None {
-        return;
-    }
-    if keyboard_input.pressed(KeyCode::Left) {
-        *direction = MoveDirection::Left;
-    } else if keyboard_input.pressed(KeyCode::Right) {
-        *direction = MoveDirection::Right;
+fn input_handler(
+    keyboard_input: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    mut direction: ResMut<MoveDirection>,
+    mut drop_timer: ResMut<DropTimer>,
+    mut hold_timer: ResMut<HoldTimer>,
+    mut pressed_timer: ResMut<PressedTimer>,
+    mut is_holding: ResMut<KeyHolds>,
+) {
+    if keyboard_input.pressed(KeyCode::Right) {
+        if keyboard_input.just_pressed(KeyCode::Right) {
+            hold_timer.0.reset();
+            pressed_timer.0.reset();
+            *direction = MoveDirection::Right;
+        } else if !is_holding.right && hold_timer.0.tick(time.delta()).just_finished() {
+            is_holding.right = true;
+        } else if is_holding.right && pressed_timer.0.tick(time.delta()).just_finished() {
+            *direction = MoveDirection::Right;
+        } 
+    } else if keyboard_input.pressed(KeyCode::Left) {
+        if keyboard_input.just_pressed(KeyCode::Left) {
+            hold_timer.0.reset();
+            pressed_timer.0.reset();
+            *direction = MoveDirection::Left;
+        } else if !is_holding.left && hold_timer.0.tick(time.delta()).just_finished() {
+            is_holding.left = true;
+        } else if is_holding.left && pressed_timer.0.tick(time.delta()).just_finished() {
+            *direction = MoveDirection::Left;
+        } 
     } else if keyboard_input.pressed(KeyCode::Down) {
-        *direction = MoveDirection::Down;
+        if keyboard_input.just_pressed(KeyCode::Down) {
+            hold_timer.0.reset();
+            pressed_timer.0.reset();
+            *direction = MoveDirection::Down;
+        } else if !is_holding.down && hold_timer.0.tick(time.delta()).just_finished() {
+            is_holding.down = true;
+        } else if is_holding.down && pressed_timer.0.tick(time.delta()).just_finished() {
+            *direction = MoveDirection::Down;
+        } 
+    } else {
+        hold_timer.0.reset();
+        pressed_timer.0.reset();
+    }
+
+    if keyboard_input.just_released(KeyCode::Right) {
+        is_holding.right = false;
+    }
+    if keyboard_input.just_released(KeyCode::Left) {
+        is_holding.left = false;
+    }
+    if keyboard_input.just_released(KeyCode::Down) {
+        is_holding.down = false;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        drop_timer.0.reset();
+        drop_timer.0.unpause();
     }
 }

@@ -142,7 +142,7 @@ pub fn move_tetromino(
         Tetromino::L => crate::constants::L_LAYOUT[**index].parse(),
     };
 
-    if valid_in_board(&blocks_in_board, &layout, &(&*pos + &pos_add)) {
+    if valid_in_board(&blocks_in_board, &layout, &(*pos + pos_add)) {
         *pos += pos_add;
         transform.translation.x += TETROMINO_SIZE.x * pos_add.x as f32;
         transform.translation.y += TETROMINO_SIZE.y * -pos_add.y as f32;

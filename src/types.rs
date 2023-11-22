@@ -24,17 +24,6 @@ impl Add for Position {
     }
 }
 
-impl<'a> Add<&'a Position> for &'a Position {
-    type Output = Position;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Position {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
-    }
-}
-
 impl AddAssign for Position {
     fn add_assign(&mut self, rhs: Self) {
         self.x += rhs.x;
