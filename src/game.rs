@@ -21,3 +21,17 @@ pub fn bevy_default_set() -> PluginGroupBuilder {
 pub fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
+
+pub fn update(
+    buttons: Query<&Interaction>,
+    mut window: Query<&mut Window>,
+) {
+    let mut window = window.single_mut();
+    for buttons in buttons.iter() {
+        if buttons.eq(&Interaction::Hovered) {
+            window.cursor.icon = CursorIcon::Hand;
+        } else {
+            window.cursor.icon = CursorIcon::Default;
+        }
+    }
+}

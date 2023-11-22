@@ -5,7 +5,7 @@ pub const SCALE_SIZE: f32 = 0.25;
 pub const TETROMINO_SIZE: Vec2 = Vec2::new(90.0 * SCALE_SIZE, 90.0 * SCALE_SIZE);
 
 pub const BOARD_OUTER_SIZE: Vec2 = Vec2::new(959.4 * SCALE_SIZE, 1859.4 * SCALE_SIZE);
-pub const BOARD_INNER_SIZE: Vec2 = Vec2::new(900.0 * SCALE_SIZE, 1800.0 * SCALE_SIZE);
+//pub const BOARD_INNER_SIZE: Vec2 = Vec2::new(900.0 * SCALE_SIZE, 1800.0 * SCALE_SIZE);
 pub const BOARD_BORDER_THICKNESS: f32 = 29.7 * SCALE_SIZE;
 
 pub const BOARD_POSITION: Vec2 = Vec2::new(-BOARD_OUTER_SIZE.x / 2., BOARD_OUTER_SIZE.y / 2.);

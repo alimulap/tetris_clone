@@ -1,38 +1,30 @@
-#![allow(unused)]
-
 use std::ops::{Deref, DerefMut};
 
 use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
-    constants::{BOARD_INNER_SIZE, BOARD_OUTER_SIZE, BOARD_POSITION},
-    state::AppState,
-    tetromino::{self, Tetromino}, types::Position,
+    constants::{BOARD_OUTER_SIZE, BOARD_POSITION},
+    states::AppState,
+    types::Position,
 };
+
+use super::tetromino::{spawn_tetromino, Tetromino};
 
 #[derive(Component)]
 pub struct Board;
-
-pub struct BoardPlugin;
-
-impl Plugin for BoardPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Game), setup)
-            .insert_resource(BlocksInBoard(vec![vec![0; 20]; 10]));
-    }
-}
 
 pub fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     blocks_in_board: Res<BlocksInBoard>,
-    mut next_state: ResMut<NextState<AppState>>,
+    next_state: ResMut<NextState<AppState>>,
 ) {
+    let texture = asset_server.load("board.png");
     let board = commands
         .spawn((
             Board,
             SpriteBundle {
-                texture: asset_server.load("board.png"),
+                texture,
                 transform: Transform {
                     translation: BOARD_POSITION.extend(0.0),
                     ..Default::default()
@@ -47,7 +39,7 @@ pub fn setup(
         ))
         .id();
 
-    tetromino::spawn_tetromino(
+    spawn_tetromino(
         Tetromino::J,
         &blocks_in_board,
         &mut commands,
@@ -59,6 +51,12 @@ pub fn setup(
 
 #[derive(Resource)]
 pub struct BlocksInBoard(Vec<Vec<u8>>);
+
+impl BlocksInBoard {
+    pub fn new() -> Self {
+        Self(vec![vec![0; 10]; 20])
+    }
+}
 
 impl Deref for BlocksInBoard {
     type Target = Vec<Vec<u8>>;
@@ -99,4 +97,3 @@ pub fn valid_in_board(
 
     return true;
 }
-

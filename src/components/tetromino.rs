@@ -1,21 +1,15 @@
-#![allow(unused)]
-
 use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
-    board::{self, BlocksInBoard, Board},
-    constants::{BOARD_BORDER_THICKNESS, BOARD_POSITION, TETROMINO_SIZE},
-    state::AppState,
+    constants::{BOARD_BORDER_THICKNESS, TETROMINO_SIZE},
+    states::AppState,
     types::Position,
     utils::LayoutParse,
 };
 
-pub struct TetrominoPlugin;
+use super::board::{valid_in_board, BlocksInBoard};
 
-impl Plugin for TetrominoPlugin {
-    fn build(&self, _app: &mut App) {}
-}
-
+#[allow(unused)]
 #[derive(Component)]
 pub enum Tetromino {
     I,
@@ -32,8 +26,6 @@ pub struct Block;
 
 #[derive(Component)]
 pub struct IndexLayout(pub usize);
-
-pub fn _setup(_commands: &mut Commands, _asset_server: Res<AssetServer>) {}
 
 pub fn spawn_tetromino(
     tetromino: Tetromino,
@@ -61,7 +53,7 @@ pub fn spawn_tetromino(
         Tetromino::L => crate::constants::L_LAYOUT[*index].parse(),
     };
 
-    if !board::valid_in_board(blocks_in_board, &layout, &pos) {
+    if !valid_in_board(blocks_in_board, &layout, &pos) {
         next_state.set(AppState::GameOver);
         return;
     }
@@ -87,7 +79,7 @@ pub fn spawn_tetromino(
             for (y, row) in layout.iter().enumerate() {
                 for (x, block) in row.iter().enumerate() {
                     if *block == 1 {
-                        spawn_block(parent, texture.clone(), x as f32, y as f32);
+                        spawn_block(parent, texture.clone(), pos, x, y);
                     }
                 }
             }
@@ -97,9 +89,10 @@ pub fn spawn_tetromino(
     commands.entity(board).add_child(tetromino);
 }
 
-pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, x: f32, y: f32) {
+pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, pos: Position, x: usize, y: usize) {
     parent.spawn((
         Block,
+        Position::new(x as i32, y as i32) + pos,
         SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(TETROMINO_SIZE),
@@ -107,8 +100,8 @@ pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, x: f32, y:
                 ..Default::default()
             },
             transform: Transform::from_translation(Vec3 {
-                x: x * TETROMINO_SIZE.x,
-                y: y * -TETROMINO_SIZE.y,
+                x: x as f32 * TETROMINO_SIZE.x,
+                y: y as f32 * -TETROMINO_SIZE.y,
                 z: 0.,
             }),
             texture,
@@ -116,3 +109,47 @@ pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, x: f32, y:
         },
     ));
 }
+
+#[allow(unused)]
+#[derive(Resource, PartialEq)]
+pub enum MoveDirection {
+    Left,
+    Right,
+    Down,
+    None
+}
+
+pub fn move_tetromino(
+    //mut commands: Commands,
+    mut query: Query<(&Tetromino, &mut Position, &mut Transform, &IndexLayout)>,
+    blocks_in_board: Res<BlocksInBoard>,
+    mut direction: ResMut<MoveDirection>,
+) {
+    let pos_add = match *direction {
+        MoveDirection::Left => Position::new(-1, 0),
+        MoveDirection::Right => Position::new(1, 0),
+        MoveDirection::Down => Position::new(0, 1),
+        MoveDirection::None => return,
+    };
+    let (tetromino, mut pos, mut transform, index) = query.single_mut();
+    let layout = match tetromino {
+        Tetromino::I => crate::constants::I_LAYOUT[**index].parse(),
+        Tetromino::O => crate::constants::O_LAYOUT[**index].parse(),
+        Tetromino::T => crate::constants::T_LAYOUT[**index].parse(),
+        Tetromino::S => crate::constants::S_LAYOUT[**index].parse(),
+        Tetromino::Z => crate::constants::Z_LAYOUT[**index].parse(),
+        Tetromino::J => crate::constants::J_LAYOUT[**index].parse(),
+        Tetromino::L => crate::constants::L_LAYOUT[**index].parse(),
+    };
+
+    if valid_in_board(&blocks_in_board, &layout, &(&*pos + &pos_add)) {
+        *pos += pos_add;
+        transform.translation.x += TETROMINO_SIZE.x * pos_add.x as f32;
+        transform.translation.y += TETROMINO_SIZE.y * -pos_add.y as f32;
+    } else {
+        println!("Can't move");
+    }
+
+    *direction = MoveDirection::None;
+}
+
