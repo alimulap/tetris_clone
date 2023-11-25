@@ -3,8 +3,8 @@ use std::ops::{Deref, DerefMut};
 use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
-    constants::{BOARD_OUTER_SIZE, BOARD_POSITION},
-    states::AppState,
+    constants::{BOARD_OUTER_SIZE, BOARD_POSITION, BOARD_BORDER_THICKNESS, TETROMINO_SIZE},
+    states::{AppState, game::ShouldMerge},
     types::Position,
 };
 
@@ -49,12 +49,50 @@ pub fn setup(
     );
 }
 
-#[derive(Resource)]
+pub fn merge_blocks(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut shuold_merge: ResMut<ShouldMerge>,
+    next_state: ResMut<NextState<AppState>>,
+    mut blocks_in_board: ResMut<BlocksInBoard>,
+    mut query: Query<(Entity, &Children, &Position), With<Tetromino>>,
+    board: Query<Entity, With<Board>>,
+    mut tf_query: Query<(&Position, &mut Transform)>,
+) {
+    if **shuold_merge {
+        let (entt, children, pos_t) = query.single_mut();
+        let board = board.single();
+        for child in children {
+            let (pos_b, mut tf) = tf_query.get_mut(*child).unwrap();
+            let pos = pos_b + pos_t;
+            println!("detach block pos: {:?}", pos);
+            tf.translation.x = BOARD_BORDER_THICKNESS + pos.x as f32 * TETROMINO_SIZE.x;
+            tf.translation.y = -BOARD_BORDER_THICKNESS - pos.y as f32 * TETROMINO_SIZE.y;
+            blocks_in_board[pos.y as usize][pos.x as usize] = 1;
+            commands.entity(*child).set_parent(board);
+        }
+        blocks_in_board.display();
+        commands.entity(entt).despawn();
+        spawn_tetromino(Tetromino::J, &blocks_in_board, &mut commands, &asset_server, board, next_state);
+        **shuold_merge = false;
+    }
+}
+
+#[derive(Debug, Resource)]
 pub struct BlocksInBoard(Vec<Vec<u8>>);
 
 impl BlocksInBoard {
     pub fn new() -> Self {
         Self(vec![vec![0; 10]; 20])
+    }
+
+    pub fn display(&self) {
+        for row in self.iter() {
+            for block in row.iter() {
+                print!("{} ", block);
+            }
+            println!();
+        }
     }
 }
 
@@ -80,14 +118,14 @@ pub fn valid_in_board(
     for (y, row) in layout.iter().enumerate() {
         for (x, block) in row.iter().enumerate() {
             if *block == 1 {
-                let x = x as i32 + pos.x;
-                let y = y as i32 + pos.y;
+                let pos_x = x as i32 + pos.x;
+                let pos_y = y as i32 + pos.y;
 
-                if x < 0
-                    || x >= 10
-                    || y < 0
-                    || y >= 20
-                    || blocks_in_board[y as usize][x as usize] == 1
+                if pos_x < 0
+                    || pos_x >= 10
+                    || pos_y < 0
+                    || pos_y >= 20
+                    || blocks_in_board[pos_y as usize][pos_x as usize] == 1
                 {
                     return false;
                 }

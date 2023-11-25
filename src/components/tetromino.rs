@@ -2,7 +2,7 @@ use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
     constants::{BOARD_BORDER_THICKNESS, TETROMINO_SIZE},
-    states::AppState,
+    states::{AppState, game::DropTimer},
     types::Position,
     utils::LayoutParse,
 };
@@ -55,6 +55,8 @@ pub fn spawn_tetromino(
 
     if !valid_in_board(blocks_in_board, &layout, &pos) {
         next_state.set(AppState::GameOver);
+        println!("Game Over");
+        println!("layout: {:?}, pos: {:?}", layout, pos);
         return;
     }
 
@@ -79,24 +81,29 @@ pub fn spawn_tetromino(
             for (y, row) in layout.iter().enumerate() {
                 for (x, block) in row.iter().enumerate() {
                     if *block == 1 {
-                        spawn_block(parent, texture.clone(), pos, x, y);
+                        spawn_block(parent, texture.clone(), x, y);
                     }
                 }
             }
         })
         .id();
 
+    println!("tetromino: {:?}", tetromino);
+
     commands.entity(board).add_child(tetromino);
 }
 
-pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, pos: Position, x: usize, y: usize) {
+pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, x: usize, y: usize) {
+    let pos = Position::new(x as i32, y as i32);
+    println!("spawn block pos: {:?}", pos);
     parent.spawn((
         Block,
-        Position::new(x as i32, y as i32) + pos,
+        pos,
         SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(TETROMINO_SIZE),
                 anchor: Anchor::TopLeft,
+                // color: Color::rgba(1., 1., 1., 0.5),
                 ..Default::default()
             },
             transform: Transform::from_translation(Vec3 {
@@ -120,10 +127,11 @@ pub enum MoveDirection {
 }
 
 pub fn move_tetromino(
-    //mut commands: Commands,
+    // mut commands: Commands,
     mut query: Query<(&Tetromino, &mut Position, &mut Transform, &IndexLayout)>,
     blocks_in_board: Res<BlocksInBoard>,
     mut direction: ResMut<MoveDirection>,
+    mut drop_timer: ResMut<DropTimer>,
 ) {
     let pos_add = match *direction {
         MoveDirection::Left => Position::new(-1, 0),
@@ -146,9 +154,16 @@ pub fn move_tetromino(
         *pos += pos_add;
         transform.translation.x += TETROMINO_SIZE.x * pos_add.x as f32;
         transform.translation.y += TETROMINO_SIZE.y * -pos_add.y as f32;
-    } else {
-        println!("Can't move");
+        if !drop_timer.paused() && (*direction == MoveDirection::Left || *direction == MoveDirection::Right) {
+            drop_timer.restart();
+        }
+    } else if *direction == MoveDirection::Down {
+        println!("Can't move down");
+        drop_timer.start();
     }
+    // else {
+    //     println!("Can't move");
+    // }
 
     *direction = MoveDirection::None;
 }
