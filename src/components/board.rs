@@ -65,13 +65,11 @@ pub fn merge_blocks(
         for child in children {
             let (pos_b, mut tf) = tf_query.get_mut(*child).unwrap();
             let pos = pos_b + pos_t;
-            println!("detach block pos: {:?}", pos);
             tf.translation.x = BOARD_BORDER_THICKNESS + pos.x as f32 * TETROMINO_SIZE.x;
             tf.translation.y = -BOARD_BORDER_THICKNESS - pos.y as f32 * TETROMINO_SIZE.y;
             blocks_in_board[pos.y as usize][pos.x as usize] = 1;
             commands.entity(*child).set_parent(board);
         }
-        blocks_in_board.display();
         commands.entity(entt).despawn();
         spawn_tetromino(Tetromino::J, &blocks_in_board, &mut commands, &asset_server, board, next_state);
         **shuold_merge = false;
@@ -86,6 +84,7 @@ impl BlocksInBoard {
         Self(vec![vec![0; 10]; 20])
     }
 
+    #[allow(unused)]
     pub fn display(&self) {
         for row in self.iter() {
             for block in row.iter() {

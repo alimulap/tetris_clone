@@ -42,6 +42,19 @@ impl<'a> Add<&'a Position> for &'a Position {
     }
 }
 
+impl IndexLayout {
+    pub fn rotate(&mut self, direction: i8) {
+        let idx = **self;
+        if idx == 0 && direction == -1 {
+            **self = 3;
+        } else if idx == 3 && direction == 1 {
+            **self = 0;
+        } else {
+            **self = (idx as i8 + direction) as usize;
+        }
+    }
+}
+
 impl Deref for IndexLayout {
     type Target = usize;
 

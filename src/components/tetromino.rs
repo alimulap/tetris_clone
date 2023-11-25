@@ -55,8 +55,6 @@ pub fn spawn_tetromino(
 
     if !valid_in_board(blocks_in_board, &layout, &pos) {
         next_state.set(AppState::GameOver);
-        println!("Game Over");
-        println!("layout: {:?}, pos: {:?}", layout, pos);
         return;
     }
 
@@ -88,14 +86,11 @@ pub fn spawn_tetromino(
         })
         .id();
 
-    println!("tetromino: {:?}", tetromino);
-
     commands.entity(board).add_child(tetromino);
 }
 
 pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, x: usize, y: usize) {
     let pos = Position::new(x as i32, y as i32);
-    println!("spawn block pos: {:?}", pos);
     parent.spawn((
         Block,
         pos,
@@ -124,6 +119,13 @@ pub enum MoveDirection {
     Right,
     Down,
     None
+}
+
+#[derive(Resource, PartialEq)]
+pub enum RotateDirection {
+    Clockwise,
+    CounterClockwise,
+    None,
 }
 
 pub fn move_tetromino(
@@ -158,13 +160,55 @@ pub fn move_tetromino(
             drop_timer.restart();
         }
     } else if *direction == MoveDirection::Down {
-        println!("Can't move down");
         drop_timer.start();
     }
-    // else {
-    //     println!("Can't move");
-    // }
 
     *direction = MoveDirection::None;
+}
+
+pub fn rotate_tetromino(
+    mut query: Query<(&Tetromino, &Position, &mut IndexLayout, &Children)>,
+    mut tf_query: Query<(&mut Transform, &mut Position), Without<Tetromino>>,
+    blocks_in_board: Res<BlocksInBoard>,
+    mut direction: ResMut<RotateDirection>,
+    mut drop_timer: ResMut<DropTimer>,
+) {
+    let add_idx = match *direction {
+        RotateDirection::Clockwise => 1,
+        RotateDirection::CounterClockwise => -1,
+        RotateDirection::None => return,
+    };
+
+    let (tetromino, pos, mut index, children) = query.single_mut();
+    index.rotate(add_idx);
+
+    let layout = match tetromino {
+        Tetromino::I => crate::constants::I_LAYOUT[**index].parse(),
+        Tetromino::O => crate::constants::O_LAYOUT[**index].parse(),
+        Tetromino::T => crate::constants::T_LAYOUT[**index].parse(),
+        Tetromino::S => crate::constants::S_LAYOUT[**index].parse(),
+        Tetromino::Z => crate::constants::Z_LAYOUT[**index].parse(),
+        Tetromino::J => crate::constants::J_LAYOUT[**index].parse(),
+        Tetromino::L => crate::constants::L_LAYOUT[**index].parse(),
+    };
+
+    if valid_in_board(&blocks_in_board, &layout, &*pos) {
+        let mut children = children.iter();
+        for (y, row) in layout.iter().enumerate() {
+            for (x, block) in row.iter().enumerate() {
+                if *block == 1 {
+                    let (mut tf,mut pos) = tf_query.get_mut(*children.next().unwrap()).unwrap();
+                    tf.translation.x = x as f32 * TETROMINO_SIZE.x;
+                    tf.translation.y = y as f32 * -TETROMINO_SIZE.y;
+                    pos.x = x as i32;
+                    pos.y = y as i32;
+                }
+            }
+        }
+        if !drop_timer.paused() && (*direction == RotateDirection::Clockwise || *direction == RotateDirection::CounterClockwise) {
+            drop_timer.restart();
+        } 
+        *direction = RotateDirection::None;
+    }
 }
 
