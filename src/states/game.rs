@@ -18,7 +18,15 @@ impl Plugin for GamePlugin {
             .add_systems(OnEnter(AppState::Game), board::setup)
             .add_systems(
                 Update,
-                (input_handler, move_tetromino, rotate_tetromino , timer_ticker, board::merge_blocks).chain().run_if(in_state(AppState::Game)),
+                (
+                    input_handler,
+                    move_tetromino,
+                    rotate_tetromino,
+                    timer_ticker,
+                    board::merge_blocks,
+                )
+                    .chain()
+                    .run_if(in_state(AppState::Game)),
             )
             .add_systems(OnExit(AppState::Game), cleanup);
     }
@@ -82,11 +90,13 @@ impl KeyHolds {
 #[derive(Resource)]
 pub struct ShouldMerge(pub bool);
 
-
 fn setup(mut commands: Commands) {
     commands.insert_resource(MoveDirection::None);
-    commands.insert_resource(HoldTimer(Timer::from_seconds(0.15, TimerMode::Repeating)));
-    commands.insert_resource(PressedTimer(Timer::from_seconds(0.05, TimerMode::Repeating)));
+    commands.insert_resource(HoldTimer(Timer::from_seconds(0.1, TimerMode::Repeating)));
+    commands.insert_resource(PressedTimer(Timer::from_seconds(
+        0.05,
+        TimerMode::Repeating,
+    )));
     commands.insert_resource(MoveTimer(Timer::from_seconds(1.2, TimerMode::Repeating)));
     commands.insert_resource(IsHolding(false));
     commands.insert_resource(KeyHolds::new());
@@ -188,5 +198,3 @@ fn input_handler(
         *rotate_direction = RotateDirection::CounterClockwise;
     }
 }
-
-

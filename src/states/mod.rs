@@ -13,3 +13,11 @@ pub enum AppState {
     Game,
     GameOver,
 }
+
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum PlayerState {
+    #[default]
+    Idle,
+    Walk,
+    Run
+}
