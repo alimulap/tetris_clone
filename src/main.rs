@@ -1,4 +1,4 @@
-use bevy::prelude::{App, Startup, Update};
+use bevy::{prelude::{App, Startup, Update}, window::close_on_esc};
 use states::AppState;
 
 mod game;
@@ -18,6 +18,7 @@ fn main() {
         //.add_plugins(tetromino::TetrominoPlugin)
         .add_systems(Startup, game::setup)
         .add_systems(Update, game::update)
+        .add_systems(Update, close_on_esc)
         //.add_systems(Startup, state::main_menu::setup)
         .run();
 }
