@@ -14,10 +14,12 @@ pub enum AppState {
     GameOver,
 }
 
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-pub enum PlayerState {
-    #[default]
-    Idle,
-    Walk,
-    Run
-}
+//#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+//pub enum PlayerState {
+//    #[default]
+//    Idle,
+//    #[allow(dead_code)]
+//    Walk,
+//    #[allow(dead_code)]
+//    Run
+//}
