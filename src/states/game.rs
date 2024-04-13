@@ -147,7 +147,7 @@ fn timer_ticker(
 
 fn input_handler(
     time: Res<Time>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut move_direction: ResMut<MoveDirection>,
     mut rotate_direction: ResMut<RotateDirection>,
     mut hold_timer: ResMut<HoldTimer>,
@@ -165,8 +165,8 @@ fn input_handler(
             is_holding.down = false;
         }
         (false, false) => {
-            if keyboard_input.pressed(KeyCode::Right) {
-                if keyboard_input.just_pressed(KeyCode::Right) {
+            if keyboard_input.pressed(KeyCode::ArrowRight) {
+                if keyboard_input.just_pressed(KeyCode::ArrowRight) {
                     hold_timer.0.reset();
                     pressed_timer.0.reset();
                     *move_direction = MoveDirection::Right;
@@ -175,8 +175,8 @@ fn input_handler(
                 } else if is_holding.right && pressed_timer.0.tick(time.delta()).just_finished() {
                     *move_direction = MoveDirection::Right;
                 }
-            } else if keyboard_input.pressed(KeyCode::Left) {
-                if keyboard_input.just_pressed(KeyCode::Left) {
+            } else if keyboard_input.pressed(KeyCode::ArrowLeft) {
+                if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
                     hold_timer.0.reset();
                     pressed_timer.0.reset();
                     *move_direction = MoveDirection::Left;
@@ -185,8 +185,8 @@ fn input_handler(
                 } else if is_holding.left && pressed_timer.0.tick(time.delta()).just_finished() {
                     *move_direction = MoveDirection::Left;
                 }
-            } else if keyboard_input.pressed(KeyCode::Down) {
-                if keyboard_input.just_pressed(KeyCode::Down) {
+            } else if keyboard_input.pressed(KeyCode::ArrowDown) {
+                if keyboard_input.just_pressed(KeyCode::ArrowDown) {
                     hold_timer.0.reset();
                     pressed_timer.0.reset();
                     *move_direction = MoveDirection::Down;
@@ -200,19 +200,19 @@ fn input_handler(
                 pressed_timer.0.reset();
             }
 
-            if keyboard_input.just_released(KeyCode::Right) {
+            if keyboard_input.just_released(KeyCode::ArrowRight) {
                 is_holding.right = false;
             }
-            if keyboard_input.just_released(KeyCode::Left) {
+            if keyboard_input.just_released(KeyCode::ArrowLeft) {
                 is_holding.left = false;
             }
-            if keyboard_input.just_released(KeyCode::Down) {
+            if keyboard_input.just_released(KeyCode::ArrowDown) {
                 is_holding.down = false;
             }
 
-            if keyboard_input.just_pressed(KeyCode::Up) {
+            if keyboard_input.just_pressed(KeyCode::ArrowUp) {
                 *rotate_direction = RotateDirection::Clockwise;
-            } else if keyboard_input.just_pressed(KeyCode::Z) {
+            } else if keyboard_input.just_pressed(KeyCode::KeyQ) {
                 *rotate_direction = RotateDirection::CounterClockwise;
             }
         }

@@ -11,7 +11,7 @@ mod types;
 fn main() {
     App::new()
         .add_plugins(game::bevy_default_set())
-        .add_state::<AppState>()
+        .init_state::<AppState>()
         .add_plugins(states::MainMenuPlugin)
         .add_plugins(states::GamePlugin)
         //.add_plugins(board::BoardPlugin)
@@ -27,14 +27,14 @@ fn main() {
 pub fn close_on_q(
     mut commands: Commands,
     focused_windows: Query<(Entity, &Window)>,
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
 ) {
     for (window, focus) in focused_windows.iter() {
         if !focus.focused {
             continue;
         }
 
-        if input.just_pressed(KeyCode::Q) {
+        if input.just_pressed(KeyCode::KeyQ) {
             commands.entity(window).despawn();
         }
     }

@@ -45,7 +45,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                         color: Color::WHITE,
                     },
                 )
-                .with_text_alignment(TextAlignment::Center)
+                .with_text_justify(JustifyText::Center)
                 .with_style(Style {
                     margin: UiRect::all(Val::Px(15.0)),
                     ..Default::default()
