@@ -14,8 +14,8 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(BlocksInBoard::new())
-            .add_systems(OnEnter(AppState::Game), setup)
-            .add_systems(OnEnter(AppState::Game), board::setup)
+            .add_systems(OnEnter(AppState::Game), (setup, board::setup.after(setup)))
+            // .add_systems(OnEnter(AppState::Game), board::setup)
             .add_systems(
                 Update,
                 (
@@ -91,7 +91,10 @@ impl KeyHolds {
 #[derive(Resource)]
 pub struct ShouldMerge(pub bool);
 
-fn setup(mut commands: Commands) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
     commands.insert_resource(MoveDirection::None);
     commands.insert_resource(HoldTimer(Timer::from_seconds(0.1, TimerMode::Repeating)));
     commands.insert_resource(PressedTimer(Timer::from_seconds(
@@ -107,6 +110,7 @@ fn setup(mut commands: Commands) {
     commands.insert_resource(ShouldMerge(false));
     commands.insert_resource(RotateDirection::None);
     commands.insert_resource(ShouldHardDrop(false));
+    let _ = asset_server.load::<Image>("board.png");
 }
 
 fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>>) {
