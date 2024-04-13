@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut, Add, AddAssign};
 use bevy::prelude::Component;
 
-use crate::{components::tetromino::IndexLayout, states::game::ShouldMerge};
+use crate::{components::tetromino::{IndexLayout, ShouldHardDrop}, states::game::ShouldMerge};
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct Position {
@@ -12,6 +12,14 @@ pub struct Position {
 impl Position {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+
+    pub fn add_some_cloned(&mut self, other: &[&Position]) -> Self {
+        let mut result = *self;
+        for p in other.iter() {
+            result += **p;
+        }
+        result
     }
 }
 
@@ -83,3 +91,16 @@ impl DerefMut for ShouldMerge {
     }
 }
 
+impl Deref for ShouldHardDrop {
+    type Target = bool;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ShouldHardDrop {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}

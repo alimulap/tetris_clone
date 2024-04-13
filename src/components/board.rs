@@ -3,8 +3,8 @@ use std::ops::{Deref, DerefMut};
 use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
-    constants::{BOARD_OUTER_SIZE, BOARD_POSITION, BOARD_BORDER_THICKNESS, TETROMINO_SIZE},
-    states::{AppState, game::ShouldMerge},
+    constants::{BOARD_BORDER_THICKNESS, BOARD_OUTER_SIZE, BOARD_POSITION, TETROMINO_SIZE},
+    states::{game::ShouldMerge, AppState},
     types::Position,
 };
 
@@ -70,8 +70,16 @@ pub fn merge_blocks(
             blocks_in_board[pos.y as usize][pos.x as usize] = 1;
             commands.entity(*child).set_parent(board);
         }
+        commands.entity(board).remove_children(&[entt]);
         commands.entity(entt).despawn();
-        spawn_tetromino(Tetromino::J, &blocks_in_board, &mut commands, &asset_server, board, next_state);
+        spawn_tetromino(
+            Tetromino::J,
+            &blocks_in_board,
+            &mut commands,
+            &asset_server,
+            board,
+            next_state,
+        );
         **shuold_merge = false;
     }
 }

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::components::{
     board::{self, BlocksInBoard},
-    tetromino::{move_tetromino, rotate_tetromino, MoveDirection, RotateDirection},
+    tetromino::{move_tetromino, rotate_tetromino, hard_drop_handler, MoveDirection, RotateDirection, ShouldHardDrop},
 };
 
 use super::AppState;
@@ -23,6 +23,7 @@ impl Plugin for GamePlugin {
                     move_tetromino,
                     rotate_tetromino,
                     timer_ticker,
+                    hard_drop_handler,
                     board::merge_blocks,
                 )
                     .chain()
@@ -105,6 +106,7 @@ fn setup(mut commands: Commands) {
     commands.insert_resource(DropTimer(drop_timer));
     commands.insert_resource(ShouldMerge(false));
     commands.insert_resource(RotateDirection::None);
+    commands.insert_resource(ShouldHardDrop(false));
 }
 
 fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>>) {
@@ -118,6 +120,7 @@ fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>
     commands.remove_resource::<KeyHolds>();
     commands.remove_resource::<ShouldMerge>();
     commands.remove_resource::<RotateDirection>();
+    commands.remove_resource::<ShouldHardDrop>();
     commands.entity(board_query.single()).despawn_recursive();
 }
 
@@ -146,55 +149,69 @@ fn input_handler(
     mut hold_timer: ResMut<HoldTimer>,
     mut pressed_timer: ResMut<PressedTimer>,
     mut is_holding: ResMut<KeyHolds>,
+    mut should_hard_drop: ResMut<ShouldHardDrop>,
 ) {
-    if keyboard_input.pressed(KeyCode::Right) {
-        if keyboard_input.just_pressed(KeyCode::Right) {
+    match (**should_hard_drop, keyboard_input.just_pressed(KeyCode::Space)) {
+        (false, true) => {
+            **should_hard_drop = true;
             hold_timer.0.reset();
             pressed_timer.0.reset();
-            *move_direction = MoveDirection::Right;
-        } else if !is_holding.right && hold_timer.0.tick(time.delta()).just_finished() {
-            is_holding.right = true;
-        } else if is_holding.right && pressed_timer.0.tick(time.delta()).just_finished() {
-            *move_direction = MoveDirection::Right;
+            is_holding.right = false;
+            is_holding.left = false;
+            is_holding.down = false;
         }
-    } else if keyboard_input.pressed(KeyCode::Left) {
-        if keyboard_input.just_pressed(KeyCode::Left) {
-            hold_timer.0.reset();
-            pressed_timer.0.reset();
-            *move_direction = MoveDirection::Left;
-        } else if !is_holding.left && hold_timer.0.tick(time.delta()).just_finished() {
-            is_holding.left = true;
-        } else if is_holding.left && pressed_timer.0.tick(time.delta()).just_finished() {
-            *move_direction = MoveDirection::Left;
-        }
-    } else if keyboard_input.pressed(KeyCode::Down) {
-        if keyboard_input.just_pressed(KeyCode::Down) {
-            hold_timer.0.reset();
-            pressed_timer.0.reset();
-            *move_direction = MoveDirection::Down;
-        } else if !is_holding.down && hold_timer.0.tick(time.delta()).just_finished() {
-            is_holding.down = true;
-        } else if is_holding.down && pressed_timer.0.tick(time.delta()).just_finished() {
-            *move_direction = MoveDirection::Down;
-        }
-    } else {
-        hold_timer.0.reset();
-        pressed_timer.0.reset();
-    }
+        (false, false) => {
+            if keyboard_input.pressed(KeyCode::Right) {
+                if keyboard_input.just_pressed(KeyCode::Right) {
+                    hold_timer.0.reset();
+                    pressed_timer.0.reset();
+                    *move_direction = MoveDirection::Right;
+                } else if !is_holding.right && hold_timer.0.tick(time.delta()).just_finished() {
+                    is_holding.right = true;
+                } else if is_holding.right && pressed_timer.0.tick(time.delta()).just_finished() {
+                    *move_direction = MoveDirection::Right;
+                }
+            } else if keyboard_input.pressed(KeyCode::Left) {
+                if keyboard_input.just_pressed(KeyCode::Left) {
+                    hold_timer.0.reset();
+                    pressed_timer.0.reset();
+                    *move_direction = MoveDirection::Left;
+                } else if !is_holding.left && hold_timer.0.tick(time.delta()).just_finished() {
+                    is_holding.left = true;
+                } else if is_holding.left && pressed_timer.0.tick(time.delta()).just_finished() {
+                    *move_direction = MoveDirection::Left;
+                }
+            } else if keyboard_input.pressed(KeyCode::Down) {
+                if keyboard_input.just_pressed(KeyCode::Down) {
+                    hold_timer.0.reset();
+                    pressed_timer.0.reset();
+                    *move_direction = MoveDirection::Down;
+                } else if !is_holding.down && hold_timer.0.tick(time.delta()).just_finished() {
+                    is_holding.down = true;
+                } else if is_holding.down && pressed_timer.0.tick(time.delta()).just_finished() {
+                    *move_direction = MoveDirection::Down;
+                }
+            } else {
+                hold_timer.0.reset();
+                pressed_timer.0.reset();
+            }
 
-    if keyboard_input.just_released(KeyCode::Right) {
-        is_holding.right = false;
-    }
-    if keyboard_input.just_released(KeyCode::Left) {
-        is_holding.left = false;
-    }
-    if keyboard_input.just_released(KeyCode::Down) {
-        is_holding.down = false;
-    }
+            if keyboard_input.just_released(KeyCode::Right) {
+                is_holding.right = false;
+            }
+            if keyboard_input.just_released(KeyCode::Left) {
+                is_holding.left = false;
+            }
+            if keyboard_input.just_released(KeyCode::Down) {
+                is_holding.down = false;
+            }
 
-    if keyboard_input.just_pressed(KeyCode::Up) {
-        *rotate_direction = RotateDirection::Clockwise;
-    } else if keyboard_input.just_pressed(KeyCode::Z) {
-        *rotate_direction = RotateDirection::CounterClockwise;
+            if keyboard_input.just_pressed(KeyCode::Up) {
+                *rotate_direction = RotateDirection::Clockwise;
+            } else if keyboard_input.just_pressed(KeyCode::Z) {
+                *rotate_direction = RotateDirection::CounterClockwise;
+            }
+        }
+        _ => (),
     }
 }

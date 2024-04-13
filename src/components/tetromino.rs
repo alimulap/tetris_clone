@@ -2,7 +2,7 @@ use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
     constants::{BOARD_BORDER_THICKNESS, TETROMINO_SIZE},
-    states::{AppState, game::DropTimer},
+    states::{game::{DropTimer, ShouldMerge}, AppState},
     types::Position,
     utils::LayoutParse,
 };
@@ -118,7 +118,7 @@ pub enum MoveDirection {
     Left,
     Right,
     Down,
-    None
+    None,
 }
 
 #[derive(Resource, PartialEq)]
@@ -127,6 +127,9 @@ pub enum RotateDirection {
     CounterClockwise,
     None,
 }
+
+#[derive(Resource)]
+pub struct ShouldHardDrop(pub bool);
 
 pub fn move_tetromino(
     // mut commands: Commands,
@@ -156,7 +159,9 @@ pub fn move_tetromino(
         *pos += pos_add;
         transform.translation.x += TETROMINO_SIZE.x * pos_add.x as f32;
         transform.translation.y += TETROMINO_SIZE.y * -pos_add.y as f32;
-        if !drop_timer.paused() && (*direction == MoveDirection::Left || *direction == MoveDirection::Right) {
+        if !drop_timer.paused()
+            && (*direction == MoveDirection::Left || *direction == MoveDirection::Right)
+        {
             drop_timer.restart();
         }
     } else if *direction == MoveDirection::Down {
@@ -197,7 +202,7 @@ pub fn rotate_tetromino(
         for (y, row) in layout.iter().enumerate() {
             for (x, block) in row.iter().enumerate() {
                 if *block == 1 {
-                    let (mut tf,mut pos) = tf_query.get_mut(*children.next().unwrap()).unwrap();
+                    let (mut tf, mut pos) = tf_query.get_mut(*children.next().unwrap()).unwrap();
                     tf.translation.x = x as f32 * TETROMINO_SIZE.x;
                     tf.translation.y = y as f32 * -TETROMINO_SIZE.y;
                     pos.x = x as i32;
@@ -205,10 +210,49 @@ pub fn rotate_tetromino(
                 }
             }
         }
-        if !drop_timer.paused() && (*direction == RotateDirection::Clockwise || *direction == RotateDirection::CounterClockwise) {
+        if !drop_timer.paused()
+            && (*direction == RotateDirection::Clockwise
+                || *direction == RotateDirection::CounterClockwise)
+        {
             drop_timer.restart();
-        } 
+        }
         *direction = RotateDirection::None;
     }
 }
 
+pub fn hard_drop_handler(
+    mut query: Query<(&Tetromino, &mut Position, &mut Transform, &IndexLayout)>,
+    blocks_in_board: Res<BlocksInBoard>,
+    mut should_hard_drop: ResMut<ShouldHardDrop>,
+    mut should_merge: ResMut<ShouldMerge>,
+) {
+    if **should_hard_drop {
+        let (tetromino, mut pos, mut transform, index) = query.single_mut();
+        let layout = match tetromino {
+            Tetromino::I => crate::constants::I_LAYOUT[**index].parse(),
+            Tetromino::O => crate::constants::O_LAYOUT[**index].parse(),
+            Tetromino::T => crate::constants::T_LAYOUT[**index].parse(),
+            Tetromino::S => crate::constants::S_LAYOUT[**index].parse(),
+            Tetromino::Z => crate::constants::Z_LAYOUT[**index].parse(),
+            Tetromino::J => crate::constants::J_LAYOUT[**index].parse(),
+            Tetromino::L => crate::constants::L_LAYOUT[**index].parse(),
+        };
+
+        let mut pos_add = Position::new(0, 0);
+
+        while valid_in_board(
+            &blocks_in_board,
+            &layout,
+            &pos.add_some_cloned(&[&pos_add, &Position::new(0, 1)]),
+        ) {
+            pos_add.y += 1;
+        }
+
+        *pos += pos_add;
+        transform.translation.x += TETROMINO_SIZE.x * pos_add.x as f32;
+        transform.translation.y += TETROMINO_SIZE.y * -pos_add.y as f32;
+
+        **should_hard_drop = false;
+        **should_merge = true;
+    }
+}
