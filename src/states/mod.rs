@@ -6,6 +6,9 @@ pub use main_menu::MainMenuPlugin;
 pub mod game;
 pub use game::GamePlugin;
 
+pub mod game_over;
+pub use game_over::GameOverPlugin;
+
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
     #[default]

@@ -2,7 +2,10 @@ use bevy::prelude::*;
 
 use crate::components::{
     board::{self, BlocksInBoard},
-    tetromino::{move_tetromino, rotate_tetromino, hard_drop_handler, MoveDirection, RotateDirection, ShouldHardDrop},
+    tetromino::{
+        hard_drop_handler, move_tetromino, rotate_tetromino, MoveDirection, RotateDirection,
+        ShouldHardDrop,
+    },
 };
 
 use super::AppState;
@@ -13,7 +16,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(BlocksInBoard::new())
+        app
             .add_systems(OnEnter(AppState::Game), (setup, board::setup.after(setup)))
             // .add_systems(OnEnter(AppState::Game), board::setup)
             .add_systems(
@@ -91,10 +94,8 @@ impl KeyHolds {
 #[derive(Resource)]
 pub struct ShouldMerge(pub bool);
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(BlocksInBoard::new());
     commands.insert_resource(MoveDirection::None);
     commands.insert_resource(HoldTimer(Timer::from_seconds(0.1, TimerMode::Repeating)));
     commands.insert_resource(PressedTimer(Timer::from_seconds(
@@ -155,7 +156,10 @@ fn input_handler(
     mut is_holding: ResMut<KeyHolds>,
     mut should_hard_drop: ResMut<ShouldHardDrop>,
 ) {
-    match (**should_hard_drop, keyboard_input.just_pressed(KeyCode::Space)) {
+    match (
+        **should_hard_drop,
+        keyboard_input.just_pressed(KeyCode::Space),
+    ) {
         (false, true) => {
             **should_hard_drop = true;
             hold_timer.0.reset();

@@ -53,40 +53,39 @@ pub fn spawn_tetromino(
         Tetromino::L => crate::constants::L_LAYOUT[*index].parse(),
     };
 
-    if !valid_in_board(blocks_in_board, &layout, &pos) {
-        next_state.set(AppState::GameOver);
-        return;
-    }
+    if valid_in_board(blocks_in_board, &layout, &pos) {
+        let tetromino_position = Vec3::new(
+            BOARD_BORDER_THICKNESS + TETROMINO_SIZE.x * pos.x as f32,
+            -BOARD_BORDER_THICKNESS - TETROMINO_SIZE.y * pos.y as f32,
+            0.,
+        );
 
-    let tetromino_position = Vec3::new(
-        BOARD_BORDER_THICKNESS + TETROMINO_SIZE.x * pos.x as f32,
-        -BOARD_BORDER_THICKNESS - TETROMINO_SIZE.y * pos.y as f32,
-        0.,
-    );
-
-    let tetromino = commands
-        .spawn((
-            tetromino,
-            pos,
-            index,
-            TransformBundle {
-                local: Transform::from_translation(tetromino_position),
-                global: GlobalTransform::default(),
-            },
-            VisibilityBundle::default(),
-        ))
-        .with_children(|parent| {
-            for (y, row) in layout.iter().enumerate() {
-                for (x, block) in row.iter().enumerate() {
-                    if *block == 1 {
-                        spawn_block(parent, texture.clone(), x, y);
+        let tetromino = commands
+            .spawn((
+                tetromino,
+                pos,
+                index,
+                TransformBundle {
+                    local: Transform::from_translation(tetromino_position),
+                    global: GlobalTransform::default(),
+                },
+                VisibilityBundle::default(),
+            ))
+            .with_children(|parent| {
+                for (y, row) in layout.iter().enumerate() {
+                    for (x, block) in row.iter().enumerate() {
+                        if *block == 1 {
+                            spawn_block(parent, texture.clone(), x, y);
+                        }
                     }
                 }
-            }
-        })
-        .id();
+            })
+            .id();
 
-    commands.entity(board).add_child(tetromino);
+        commands.entity(board).add_child(tetromino);
+    } else {
+        next_state.set(AppState::GameOver);
+    }
 }
 
 pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, x: usize, y: usize) {

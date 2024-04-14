@@ -1,4 +1,4 @@
-use bevy::{prelude::*, app::PluginGroupBuilder, window::WindowTheme};
+use bevy::{prelude::*, app::{PluginGroupBuilder, AppExit}, window::WindowTheme};
 
 pub fn bevy_default_set() -> PluginGroupBuilder {
     DefaultPlugins.set(WindowPlugin {
@@ -32,6 +32,24 @@ pub fn update(
             window.cursor.icon = CursorIcon::Pointer;
         } else {
             window.cursor.icon = CursorIcon::Default;
+        }
+    }
+}
+
+pub fn close_on_q(
+    // mut commands: Commands,
+    focused_windows: Query<(Entity, &Window)>,
+    input: Res<ButtonInput<KeyCode>>,
+    mut exit: EventWriter<AppExit>,
+) {
+    for (_, focus) in focused_windows.iter() {
+        if !focus.focused {
+            continue;
+        }
+
+        if input.just_pressed(KeyCode::KeyQ) {
+            // commands.entity(window).despawn();
+            exit.send(AppExit);
         }
     }
 }
