@@ -10,7 +10,7 @@ use crate::{
 use super::board::{valid_in_board, BlocksInBoard};
 
 #[allow(unused)]
-#[derive(Component)]
+#[derive(Component, Clone, Copy)]
 pub enum Tetromino {
     I,
     O,

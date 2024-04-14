@@ -40,7 +40,15 @@ pub fn setup(
         .id();
 
     spawn_tetromino(
-        Tetromino::J,
+        [
+            Tetromino::I,
+            Tetromino::O,
+            Tetromino::T,
+            Tetromino::S,
+            Tetromino::Z,
+            Tetromino::J,
+            Tetromino::L,
+        ][fastrand::usize(0..7)],
         &blocks_in_board,
         &mut commands,
         &asset_server,
@@ -73,7 +81,15 @@ pub fn merge_blocks(
         commands.entity(board).remove_children(&[entt]);
         commands.entity(entt).despawn();
         spawn_tetromino(
-            Tetromino::J,
+            [
+                Tetromino::I,
+                Tetromino::O,
+                Tetromino::T,
+                Tetromino::S,
+                Tetromino::Z,
+                Tetromino::J,
+                Tetromino::L,
+            ][fastrand::usize(0..7)],
             &blocks_in_board,
             &mut commands,
             &asset_server,
