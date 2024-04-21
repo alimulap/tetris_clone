@@ -4,7 +4,7 @@ use bevy::prelude::{App, Startup, Update};
 use bevy_asset_loader::loading_state::{
     config::ConfigureLoadingState, LoadingState, LoadingStateAppExt,
 };
-use states::{game::InGameAssets, AppState, RunningState};
+use states::{game::InGameAssets, AppState};
 
 mod components;
 mod constants;
@@ -17,7 +17,7 @@ fn main() {
     App::new()
         .add_plugins(game::bevy_default_set())
         .init_state::<AppState>()
-        .init_state::<RunningState>()
+        // .init_state::<RunningState>()
         .add_plugins(states::MainMenuPlugin)
         .add_plugins(states::GamePlugin)
         .add_plugins(states::GameOverPlugin)

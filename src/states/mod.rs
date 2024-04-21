@@ -28,11 +28,11 @@ pub enum AppState {
 //    Run
 //}
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-pub enum RunningState {
-    Loading,
-    #[default]
-    Running,
-    Pause,
-}
+// #[allow(dead_code)]
+// #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+// pub enum RunningState {
+//     Loading,
+//     #[default]
+//     Running,
+//     Pause,
+// }

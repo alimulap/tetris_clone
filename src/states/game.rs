@@ -9,7 +9,7 @@ use crate::components::{
     },
 };
 
-use super::{AppState, RunningState};
+use super::AppState;
 
 //pub struct Game;
 
@@ -31,7 +31,7 @@ impl Plugin for GamePlugin {
                 )
                     .chain()
                     .run_if(in_state(AppState::Game))
-                    .run_if(in_state(RunningState::Running)),
+                    // .run_if(in_state(RunningState::Running)),
             )
             .add_systems(OnExit(AppState::Game), cleanup);
     }
