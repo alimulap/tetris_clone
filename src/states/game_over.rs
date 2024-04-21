@@ -89,7 +89,7 @@ fn on_click_restart(
     restart_button: Query<&Interaction, With<RestartButton>>,
 ) {
     if restart_button.single().eq(&Interaction::Pressed) {
-        next_state.set(AppState::Game);
+        next_state.set(AppState::LoadGame);
     }
 }
 

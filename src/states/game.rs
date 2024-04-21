@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_asset_loader::prelude::*;
 
 use crate::components::{
     board::{self, BlocksInBoard},
@@ -8,7 +9,7 @@ use crate::components::{
     },
 };
 
-use super::AppState;
+use super::{AppState, RunningState};
 
 //pub struct Game;
 
@@ -16,8 +17,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(OnEnter(AppState::Game), (setup, board::setup.after(setup)))
+        app.add_systems(OnEnter(AppState::Game), (setup, board::setup.after(setup)))
             // .add_systems(OnEnter(AppState::Game), board::setup)
             .add_systems(
                 Update,
@@ -30,10 +30,19 @@ impl Plugin for GamePlugin {
                     board::merge_blocks,
                 )
                     .chain()
-                    .run_if(in_state(AppState::Game)),
+                    .run_if(in_state(AppState::Game))
+                    .run_if(in_state(RunningState::Running)),
             )
             .add_systems(OnExit(AppState::Game), cleanup);
     }
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct InGameAssets {
+    #[asset(path = "board.png")]
+    pub board_tex: Handle<Image>,
+    #[asset(path = "tetromino.png")]
+    pub tetromino_tex: Handle<Image>,
 }
 
 #[derive(Resource)]
@@ -94,7 +103,7 @@ impl KeyHolds {
 #[derive(Resource)]
 pub struct ShouldMerge(pub bool);
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands) {
     commands.insert_resource(BlocksInBoard::new());
     commands.insert_resource(MoveDirection::None);
     commands.insert_resource(HoldTimer(Timer::from_seconds(0.1, TimerMode::Repeating)));
@@ -111,7 +120,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(ShouldMerge(false));
     commands.insert_resource(RotateDirection::None);
     commands.insert_resource(ShouldHardDrop(false));
-    let _ = asset_server.load::<Image>("board.png");
+    // commands.remove_resource();
 }
 
 fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>>) {
@@ -126,6 +135,7 @@ fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>
     commands.remove_resource::<ShouldMerge>();
     commands.remove_resource::<RotateDirection>();
     commands.remove_resource::<ShouldHardDrop>();
+    commands.remove_resource::<InGameAssets>();
     commands.entity(board_query.single()).despawn_recursive();
 }
 

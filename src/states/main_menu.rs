@@ -89,7 +89,7 @@ fn on_click_start_game(
     start_button: Query<&Interaction, With<StartGameButton>>,
 ) {
     if start_button.single().eq(&Interaction::Pressed) {
-        next_state.set(AppState::Game);
+        next_state.set(AppState::LoadGame);
     }
 }
 

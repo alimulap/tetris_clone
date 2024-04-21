@@ -3,7 +3,7 @@ use bevy::{prelude::*, app::{PluginGroupBuilder, AppExit}, window::WindowTheme};
 pub fn bevy_default_set() -> PluginGroupBuilder {
     DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            title: "Tetris Clone @alimulap".into(),
+            // title: "Tetris Clone @alimulap".into(),
             resolution: (400., 600.).into(),
             // fit_canvas_to_parent: true,
             prevent_default_event_handling: false,

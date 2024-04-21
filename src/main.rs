@@ -1,5 +1,10 @@
 use bevy::prelude::{App, Startup, Update};
-use states::AppState;
+// use bevy_asset_loader::prelude::*;
+
+use bevy_asset_loader::loading_state::{
+    config::ConfigureLoadingState, LoadingState, LoadingStateAppExt,
+};
+use states::{game::InGameAssets, AppState, RunningState};
 
 mod components;
 mod constants;
@@ -12,9 +17,15 @@ fn main() {
     App::new()
         .add_plugins(game::bevy_default_set())
         .init_state::<AppState>()
+        .init_state::<RunningState>()
         .add_plugins(states::MainMenuPlugin)
         .add_plugins(states::GamePlugin)
         .add_plugins(states::GameOverPlugin)
+        .add_loading_state(
+            LoadingState::new(AppState::LoadGame)
+                .continue_to_state(AppState::Game)
+                .load_collection::<InGameAssets>(),
+        )
         //.add_plugins(board::BoardPlugin)
         //.add_plugins(tetromino::TetrominoPlugin)
         .add_systems(Startup, game::setup)

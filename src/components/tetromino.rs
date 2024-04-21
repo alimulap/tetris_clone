@@ -31,11 +31,12 @@ pub fn spawn_tetromino(
     tetromino: Tetromino,
     blocks_in_board: &BlocksInBoard,
     commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
+    // asset_server: &Res<AssetServer>,
+    texture: &Handle<Image>,
     board: Entity,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-    let texture = asset_server.load("tetromino.png");
+    // let texture = 
 
     let pos = if let Tetromino::O = tetromino {
         Position::new(4, 0)

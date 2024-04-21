@@ -13,6 +13,7 @@ pub use game_over::GameOverPlugin;
 pub enum AppState {
     #[default]
     MainMenu,
+    LoadGame,
     Game,
     GameOver,
 }
@@ -26,3 +27,12 @@ pub enum AppState {
 //    #[allow(dead_code)]
 //    Run
 //}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum RunningState {
+    Loading,
+    #[default]
+    Running,
+    Pause,
+}

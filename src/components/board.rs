@@ -4,7 +4,10 @@ use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
     constants::{BOARD_BORDER_THICKNESS, BOARD_OUTER_SIZE, BOARD_POSITION, TETROMINO_SIZE},
-    states::{game::ShouldMerge, AppState},
+    states::{
+        game::{InGameAssets, ShouldMerge},
+        AppState,
+    },
     types::Position,
 };
 
@@ -15,16 +18,27 @@ pub struct Board;
 
 pub fn setup(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    ingame_assets: Res<InGameAssets>,
     blocks_in_board: Res<BlocksInBoard>,
     next_state: ResMut<NextState<AppState>>,
 ) {
-    let texture = asset_server.load("board.png");
+    // let texture = ingame_assets.board_tex;
+    // let cloned_texture = texture.clone_weak();
+    // while !asset_server.is_loaded_with_dependencies(&texture) {
+    //     sleep(std::time::Duration::from_millis(100));
+    // }
+    // asset_server.get_load_state()
+    // commands.spawn(texture.clone());
+    // let _ = asset_server.load::<Image>("").clone_weak();
+    // commands.spawn(AudioBundle {
+    //     source: asset_server.load(""),
+    //     ..Default::default()
+    // });
     let board = commands
         .spawn((
             Board,
             SpriteBundle {
-                texture,
+                texture: ingame_assets.board_tex.clone(),
                 transform: Transform {
                     translation: BOARD_POSITION.extend(0.0),
                     ..Default::default()
@@ -51,7 +65,7 @@ pub fn setup(
         ][fastrand::usize(0..7)],
         &blocks_in_board,
         &mut commands,
-        &asset_server,
+        &ingame_assets.tetromino_tex,
         board,
         next_state,
     );
@@ -59,7 +73,8 @@ pub fn setup(
 
 pub fn merge_blocks(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    // asset_server: Res<AssetServer>,
+    ingame_assets: Res<InGameAssets>,
     mut shuold_merge: ResMut<ShouldMerge>,
     next_state: ResMut<NextState<AppState>>,
     mut blocks_in_board: ResMut<BlocksInBoard>,
@@ -92,7 +107,7 @@ pub fn merge_blocks(
             ][fastrand::usize(0..7)],
             &blocks_in_board,
             &mut commands,
-            &asset_server,
+            &ingame_assets.tetromino_tex,
             board,
             next_state,
         );
