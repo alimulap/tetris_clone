@@ -9,7 +9,7 @@ impl Plugin for MainMenuPlugin {
         app.add_systems(OnEnter(AppState::MainMenu), setup)
             .add_systems(
                 Update,
-                on_click_start_game.run_if(in_state(AppState::MainMenu)),
+                (on_click_start_game, input_handler).run_if(in_state(AppState::MainMenu)),
             )
             .add_systems(OnExit(AppState::MainMenu), cleanup);
     }
@@ -89,6 +89,15 @@ fn on_click_start_game(
     start_button: Query<&Interaction, With<StartGameButton>>,
 ) {
     if start_button.single().eq(&Interaction::Pressed) {
+        next_state.set(AppState::LoadGame);
+    }
+}
+
+fn input_handler(
+    mut next_state: ResMut<NextState<AppState>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Enter) {
         next_state.set(AppState::LoadGame);
     }
 }

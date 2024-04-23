@@ -9,7 +9,10 @@ pub struct GameOverPlugin;
 impl Plugin for GameOverPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(OnEnter(AppState::GameOver), setup)
-            .add_systems(Update, on_click_restart.run_if(in_state(AppState::GameOver)))
+            .add_systems(
+                Update,
+                (on_click_restart, input_handler).run_if(in_state(AppState::GameOver)),
+            )
             .add_systems(OnExit(AppState::GameOver), cleanup);
     }
 }
@@ -89,6 +92,15 @@ fn on_click_restart(
     restart_button: Query<&Interaction, With<RestartButton>>,
 ) {
     if restart_button.single().eq(&Interaction::Pressed) {
+        next_state.set(AppState::LoadGame);
+    }
+}
+
+fn input_handler(
+    mut next_state: ResMut<NextState<AppState>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Enter) {
         next_state.set(AppState::LoadGame);
     }
 }
