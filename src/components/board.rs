@@ -22,18 +22,6 @@ pub fn setup(
     blocks_in_board: Res<BlocksInBoard>,
     next_state: ResMut<NextState<AppState>>,
 ) {
-    // let texture = ingame_assets.board_tex;
-    // let cloned_texture = texture.clone_weak();
-    // while !asset_server.is_loaded_with_dependencies(&texture) {
-    //     sleep(std::time::Duration::from_millis(100));
-    // }
-    // asset_server.get_load_state()
-    // commands.spawn(texture.clone());
-    // let _ = asset_server.load::<Image>("").clone_weak();
-    // commands.spawn(AudioBundle {
-    //     source: asset_server.load(""),
-    //     ..Default::default()
-    // });
     let board = commands
         .spawn((
             Board,
@@ -71,9 +59,9 @@ pub fn setup(
     );
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn merge_blocks(
     mut commands: Commands,
-    // asset_server: Res<AssetServer>,
     ingame_assets: Res<InGameAssets>,
     mut shuold_merge: ResMut<ShouldMerge>,
     next_state: ResMut<NextState<AppState>>,
@@ -150,7 +138,7 @@ impl DerefMut for BlocksInBoard {
 
 pub fn valid_in_board(
     blocks_in_board: &BlocksInBoard,
-    layout: &Vec<Vec<u8>>,
+    layout: &[Vec<u8>],
     pos: &Position,
 ) -> bool {
     for (y, row) in layout.iter().enumerate() {
@@ -159,10 +147,8 @@ pub fn valid_in_board(
                 let pos_x = x as i32 + pos.x;
                 let pos_y = y as i32 + pos.y;
 
-                if pos_x < 0
-                    || pos_x >= 10
-                    || pos_y < 0
-                    || pos_y >= 20
+                if !(0..10).contains(&pos_x)
+                    || !(0..20).contains(&pos_y)
                     || blocks_in_board[pos_y as usize][pos_x as usize] == 1
                 {
                     return false;
@@ -171,5 +157,5 @@ pub fn valid_in_board(
         }
     }
 
-    return true;
+    true
 }

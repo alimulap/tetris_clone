@@ -11,8 +11,6 @@ use crate::components::{
 
 use super::AppState;
 
-//pub struct Game;
-
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
@@ -31,7 +29,6 @@ impl Plugin for GamePlugin {
                 )
                     .chain()
                     .run_if(in_state(AppState::Game))
-                    // .run_if(in_state(RunningState::Running)),
             )
             .add_systems(OnExit(AppState::Game), cleanup);
     }
@@ -48,7 +45,6 @@ pub struct InGameAssets {
 #[derive(Resource)]
 struct MoveTimer(Timer);
 
-#[derive(Resource)]
 pub struct DropTimer(Timer);
 
 impl DropTimer {
@@ -80,12 +76,18 @@ struct PressedTimer(Timer);
 struct IsHolding(bool);
 
 #[derive(Resource)]
+pub struct GameTimers {
+    move_timer: Timer,
+    pub drop_timer: DropTimer,
+    hold_timer: Timer,
+    pressed_timer: Timer,
+}
+
+#[derive(Resource)]
 struct KeyHolds {
     left: bool,
     right: bool,
     down: bool,
-    //up: bool,
-    //space: bool,
 }
 
 impl KeyHolds {
@@ -94,8 +96,6 @@ impl KeyHolds {
             left: false,
             right: false,
             down: false,
-            //up: false,
-            //space: false,
         }
     }
 }
@@ -106,30 +106,25 @@ pub struct ShouldMerge(pub bool);
 fn setup(mut commands: Commands) {
     commands.insert_resource(BlocksInBoard::new());
     commands.insert_resource(MoveDirection::None);
-    commands.insert_resource(HoldTimer(Timer::from_seconds(0.1, TimerMode::Repeating)));
-    commands.insert_resource(PressedTimer(Timer::from_seconds(
-        0.05,
-        TimerMode::Repeating,
-    )));
-    commands.insert_resource(MoveTimer(Timer::from_seconds(1.2, TimerMode::Repeating)));
     commands.insert_resource(IsHolding(false));
     commands.insert_resource(KeyHolds::new());
-    let mut drop_timer = Timer::from_seconds(0.5, TimerMode::Once);
+    let mut drop_timer = DropTimer(Timer::from_seconds(0.5, TimerMode::Once));
     drop_timer.pause();
-    commands.insert_resource(DropTimer(drop_timer));
+    let timers = GameTimers {
+        move_timer: Timer::from_seconds(1.2, TimerMode::Repeating),
+        drop_timer,
+        hold_timer: Timer::from_seconds(0.1, TimerMode::Repeating),
+        pressed_timer: Timer::from_seconds(0.05, TimerMode::Repeating),
+    };
+    commands.insert_resource(timers);
     commands.insert_resource(ShouldMerge(false));
     commands.insert_resource(RotateDirection::None);
     commands.insert_resource(ShouldHardDrop(false));
-    // commands.remove_resource();
 }
 
 fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>>) {
     commands.remove_resource::<BlocksInBoard>();
     commands.remove_resource::<MoveDirection>();
-    commands.remove_resource::<MoveTimer>();
-    commands.remove_resource::<DropTimer>();
-    commands.remove_resource::<HoldTimer>();
-    commands.remove_resource::<PressedTimer>();
     commands.remove_resource::<IsHolding>();
     commands.remove_resource::<KeyHolds>();
     commands.remove_resource::<ShouldMerge>();
@@ -141,19 +136,18 @@ fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>
 
 fn timer_ticker(
     time: Res<Time>,
-    mut move_timer: ResMut<MoveTimer>,
-    mut drop_timer: ResMut<DropTimer>,
+    mut timers: ResMut<GameTimers>,
     mut direction: ResMut<MoveDirection>,
     mut should_merge: ResMut<ShouldMerge>,
 ) {
-    if move_timer.0.tick(time.delta()).just_finished() && *direction == MoveDirection::None {
+    if timers.move_timer.tick(time.delta()).just_finished() && *direction == MoveDirection::None {
         *direction = MoveDirection::Down;
     }
 
-    if drop_timer.0.tick(time.delta()).just_finished() && **should_merge == false {
+    if timers.drop_timer.0.tick(time.delta()).just_finished() && !**should_merge {
         *should_merge = ShouldMerge(true);
-        drop_timer.restart();
-        drop_timer.pause();
+        timers.drop_timer.restart();
+        timers.drop_timer.pause();
     }
 }
 
@@ -162,9 +156,7 @@ fn input_handler(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut move_direction: ResMut<MoveDirection>,
     mut rotate_direction: ResMut<RotateDirection>,
-    mut hold_timer: ResMut<HoldTimer>,
-    mut pressed_timer: ResMut<PressedTimer>,
-    mut drop_timer: ResMut<DropTimer>,
+    mut timers: ResMut<GameTimers>,
     mut is_holding: ResMut<KeyHolds>,
     mut should_hard_drop: ResMut<ShouldHardDrop>,
 ) {
@@ -174,11 +166,11 @@ fn input_handler(
     ) {
         (false, true) => {
             **should_hard_drop = true;
-            hold_timer.0.reset();
-            pressed_timer.0.reset();
-            if !drop_timer.paused() {
-                drop_timer.restart();
-                drop_timer.pause();
+            timers.hold_timer.reset();
+            timers.pressed_timer.reset();
+            if !timers.drop_timer.paused() {
+                timers.drop_timer.restart();
+                timers.drop_timer.pause();
             }
             is_holding.right = false;
             is_holding.left = false;
@@ -187,37 +179,37 @@ fn input_handler(
         (false, false) => {
             if keyboard_input.pressed(KeyCode::ArrowRight) {
                 if keyboard_input.just_pressed(KeyCode::ArrowRight) {
-                    hold_timer.0.reset();
-                    pressed_timer.0.reset();
+                    timers.hold_timer.reset();
+                    timers.pressed_timer.reset();
                     *move_direction = MoveDirection::Right;
-                } else if !is_holding.right && hold_timer.0.tick(time.delta()).just_finished() {
+                } else if !is_holding.right && timers.hold_timer.tick(time.delta()).just_finished() {
                     is_holding.right = true;
-                } else if is_holding.right && pressed_timer.0.tick(time.delta()).just_finished() {
+                } else if is_holding.right && timers.pressed_timer.tick(time.delta()).just_finished() {
                     *move_direction = MoveDirection::Right;
                 }
             } else if keyboard_input.pressed(KeyCode::ArrowLeft) {
                 if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
-                    hold_timer.0.reset();
-                    pressed_timer.0.reset();
+                    timers.hold_timer.reset();
+                    timers.pressed_timer.reset();
                     *move_direction = MoveDirection::Left;
-                } else if !is_holding.left && hold_timer.0.tick(time.delta()).just_finished() {
+                } else if !is_holding.left && timers.hold_timer.tick(time.delta()).just_finished() {
                     is_holding.left = true;
-                } else if is_holding.left && pressed_timer.0.tick(time.delta()).just_finished() {
+                } else if is_holding.left && timers.pressed_timer.tick(time.delta()).just_finished() {
                     *move_direction = MoveDirection::Left;
                 }
             } else if keyboard_input.pressed(KeyCode::ArrowDown) {
                 if keyboard_input.just_pressed(KeyCode::ArrowDown) {
-                    hold_timer.0.reset();
-                    pressed_timer.0.reset();
+                    timers.hold_timer.reset();
+                    timers.pressed_timer.reset();
                     *move_direction = MoveDirection::Down;
-                } else if !is_holding.down && hold_timer.0.tick(time.delta()).just_finished() {
+                } else if !is_holding.down && timers.hold_timer.tick(time.delta()).just_finished() {
                     is_holding.down = true;
-                } else if is_holding.down && pressed_timer.0.tick(time.delta()).just_finished() {
+                } else if is_holding.down && timers.pressed_timer.tick(time.delta()).just_finished() {
                     *move_direction = MoveDirection::Down;
                 }
             } else {
-                hold_timer.0.reset();
-                pressed_timer.0.reset();
+                timers.hold_timer.reset();
+                timers.pressed_timer.reset();
             }
 
             if keyboard_input.just_released(KeyCode::ArrowRight) {

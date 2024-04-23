@@ -2,7 +2,7 @@ use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
     constants::{BOARD_BORDER_THICKNESS, TETROMINO_SIZE},
-    states::{game::{DropTimer, ShouldMerge}, AppState},
+    states::{game::{GameTimers, ShouldMerge}, AppState},
     types::Position,
     utils::LayoutParse,
 };
@@ -31,13 +31,10 @@ pub fn spawn_tetromino(
     tetromino: Tetromino,
     blocks_in_board: &BlocksInBoard,
     commands: &mut Commands,
-    // asset_server: &Res<AssetServer>,
     texture: &Handle<Image>,
     board: Entity,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-    // let texture = 
-
     let pos = if let Tetromino::O = tetromino {
         Position::new(4, 0)
     } else {
@@ -98,7 +95,6 @@ pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, x: usize, 
             sprite: Sprite {
                 custom_size: Some(TETROMINO_SIZE),
                 anchor: Anchor::TopLeft,
-                // color: Color::rgba(1., 1., 1., 0.5),
                 ..Default::default()
             },
             transform: Transform::from_translation(Vec3 {
@@ -132,11 +128,10 @@ pub enum RotateDirection {
 pub struct ShouldHardDrop(pub bool);
 
 pub fn move_tetromino(
-    // mut commands: Commands,
     mut query: Query<(&Tetromino, &mut Position, &mut Transform, &IndexLayout)>,
     blocks_in_board: Res<BlocksInBoard>,
     mut direction: ResMut<MoveDirection>,
-    mut drop_timer: ResMut<DropTimer>,
+    mut timers: ResMut<GameTimers>,
 ) {
     let pos_add = match *direction {
         MoveDirection::Left => Position::new(-1, 0),
@@ -159,13 +154,13 @@ pub fn move_tetromino(
         *pos += pos_add;
         transform.translation.x += TETROMINO_SIZE.x * pos_add.x as f32;
         transform.translation.y += TETROMINO_SIZE.y * -pos_add.y as f32;
-        if !drop_timer.paused()
+        if !timers.drop_timer.paused()
             && (*direction == MoveDirection::Left || *direction == MoveDirection::Right)
         {
-            drop_timer.restart();
+            timers.drop_timer.restart();
         }
     } else if *direction == MoveDirection::Down {
-        drop_timer.start();
+        timers.drop_timer.start();
     }
 
     *direction = MoveDirection::None;
@@ -176,7 +171,7 @@ pub fn rotate_tetromino(
     mut tf_query: Query<(&mut Transform, &mut Position), Without<Tetromino>>,
     blocks_in_board: Res<BlocksInBoard>,
     mut direction: ResMut<RotateDirection>,
-    mut drop_timer: ResMut<DropTimer>,
+    mut timers: ResMut<GameTimers>,
 ) {
     let add_idx = match *direction {
         RotateDirection::Clockwise => 1,
@@ -197,7 +192,7 @@ pub fn rotate_tetromino(
         Tetromino::L => crate::constants::L_LAYOUT[**index].parse(),
     };
 
-    if valid_in_board(&blocks_in_board, &layout, &*pos) {
+    if valid_in_board(&blocks_in_board, &layout, pos) {
         let mut children = children.iter();
         for (y, row) in layout.iter().enumerate() {
             for (x, block) in row.iter().enumerate() {
@@ -210,11 +205,11 @@ pub fn rotate_tetromino(
                 }
             }
         }
-        if !drop_timer.paused()
+        if !timers.drop_timer.paused()
             && (*direction == RotateDirection::Clockwise
                 || *direction == RotateDirection::CounterClockwise)
         {
-            drop_timer.restart();
+            timers.drop_timer.restart();
         }
         *direction = RotateDirection::None;
     }
