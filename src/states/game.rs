@@ -152,6 +152,7 @@ fn timer_ticker(
 
     if drop_timer.0.tick(time.delta()).just_finished() && **should_merge == false {
         *should_merge = ShouldMerge(true);
+        drop_timer.restart();
         drop_timer.pause();
     }
 }
@@ -163,6 +164,7 @@ fn input_handler(
     mut rotate_direction: ResMut<RotateDirection>,
     mut hold_timer: ResMut<HoldTimer>,
     mut pressed_timer: ResMut<PressedTimer>,
+    mut drop_timer: ResMut<DropTimer>,
     mut is_holding: ResMut<KeyHolds>,
     mut should_hard_drop: ResMut<ShouldHardDrop>,
 ) {
@@ -174,6 +176,10 @@ fn input_handler(
             **should_hard_drop = true;
             hold_timer.0.reset();
             pressed_timer.0.reset();
+            if !drop_timer.paused() {
+                drop_timer.restart();
+                drop_timer.pause();
+            }
             is_holding.right = false;
             is_holding.left = false;
             is_holding.down = false;
