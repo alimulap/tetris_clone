@@ -24,60 +24,55 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((
             GameOver,
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..Default::default()
-                },
-                background_color: Color::rgb(0.15, 0.15, 0.15).into(),
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
+            BackgroundColor(Color::srgb(0.15, 0.15, 0.15)),
         ))
         .with_children(|parent| {
-            parent.spawn(
-                TextBundle::from_section(
-                    "GAME OVER",
-                    TextStyle {
-                        font: asset_server.load("fonts/Montserrat-Regular.ttf"),
-                        font_size: 40.0,
-                        color: Color::WHITE,
-                    },
-                )
-                .with_text_justify(JustifyText::Center)
-                .with_style(Style {
+            parent.spawn((
+                Text(String::from("GAME OVER")),
+                TextFont {
+                    font: asset_server.load("fonts/Montserrat-Regular.ttf"),
+                    font_size: 40.0,
+                    ..Default::default()
+                },
+                TextColor(Color::WHITE),
+                TextLayout::new_with_justify(JustifyText::Center),
+                Node {
                     margin: UiRect::all(Val::Px(15.0)),
                     ..Default::default()
-                }),
-            );
+                },
+            ));
             parent
                 .spawn((
                     RestartButton,
-                    ButtonBundle {
-                        style: Style {
-                            width: Val::Px(175.0),
-                            height: Val::Px(35.0),
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            border: UiRect::all(Val::Px(1.0)),
-                            ..Default::default()
-                        },
-                        background_color: Color::rgb(0.3, 0.3, 0.3).into(),
-                        border_color: Color::rgb(0.8, 0.8, 0.8).into(),
+                    Button,
+                    Node {
+                        width: Val::Px(155.0),
+                        height: Val::Px(35.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        border: UiRect::all(Val::Px(1.0)),
                         ..Default::default()
                     },
+                    BackgroundColor(Color::srgb(0.3, 0.3, 0.3)),
+                    BorderColor(Color::srgb(0.8, 0.8, 0.8)),
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "RESTART GAME",
-                        TextStyle {
+                    parent.spawn((
+                        Text(String::from("RESTART GAME")),
+                        TextFont {
                             font: asset_server.load("fonts/Montserrat-Regular.ttf"),
                             font_size: 23.0,
-                            color: Color::WHITE,
+                            ..Default::default()
                         },
+                        TextColor(Color::WHITE),
                     ));
                 });
         });

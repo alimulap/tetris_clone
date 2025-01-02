@@ -25,19 +25,13 @@ pub fn setup(
     let board = commands
         .spawn((
             Board,
-            SpriteBundle {
-                texture: ingame_assets.board_tex.clone(),
-                transform: Transform {
-                    translation: BOARD_POSITION.extend(0.0),
-                    ..Default::default()
-                },
-                sprite: Sprite {
-                    custom_size: Some(BOARD_OUTER_SIZE),
-                    anchor: Anchor::TopLeft,
-                    ..Default::default()
-                },
+            Sprite {
+                image: ingame_assets.board_tex.clone(),
+                custom_size: Some(BOARD_OUTER_SIZE),
+                anchor: Anchor::TopLeft,
                 ..Default::default()
             },
+            Transform::from_translation(BOARD_POSITION.extend(0.0)),
         ))
         .id();
 
@@ -136,11 +130,7 @@ impl DerefMut for BlocksInBoard {
     }
 }
 
-pub fn valid_in_board(
-    blocks_in_board: &BlocksInBoard,
-    layout: &[Vec<u8>],
-    pos: &Position,
-) -> bool {
+pub fn valid_in_board(blocks_in_board: &BlocksInBoard, layout: &[Vec<u8>], pos: &Position) -> bool {
     for (y, row) in layout.iter().enumerate() {
         for (x, block) in row.iter().enumerate() {
             if *block == 1 {

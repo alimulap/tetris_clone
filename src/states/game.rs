@@ -28,7 +28,7 @@ impl Plugin for GamePlugin {
                     board::merge_blocks,
                 )
                     .chain()
-                    .run_if(in_state(AppState::Game))
+                    .run_if(in_state(AppState::Game)),
             )
             .add_systems(OnExit(AppState::Game), cleanup);
     }
@@ -42,8 +42,8 @@ pub struct InGameAssets {
     pub tetromino_tex: Handle<Image>,
 }
 
-#[derive(Resource)]
-struct MoveTimer(Timer);
+// #[derive(Resource)]
+// struct MoveTimer(Timer);
 
 pub struct DropTimer(Timer);
 
@@ -66,14 +66,14 @@ impl DropTimer {
     }
 }
 
-#[derive(Resource)]
-struct HoldTimer(Timer);
+// #[derive(Resource)]
+// struct HoldTimer(Timer);
+//
+// #[derive(Resource)]
+// struct PressedTimer(Timer);
 
-#[derive(Resource)]
-struct PressedTimer(Timer);
-
-#[derive(Resource)]
-struct IsHolding(bool);
+// #[derive(Resource)]
+// struct IsHolding(bool);
 
 #[derive(Resource)]
 pub struct GameTimers {
@@ -106,12 +106,12 @@ pub struct ShouldMerge(pub bool);
 fn setup(mut commands: Commands) {
     commands.insert_resource(BlocksInBoard::new());
     commands.insert_resource(MoveDirection::None);
-    commands.insert_resource(IsHolding(false));
+    // commands.insert_resource(IsHolding(false));
     commands.insert_resource(KeyHolds::new());
     let mut drop_timer = DropTimer(Timer::from_seconds(0.5, TimerMode::Once));
     drop_timer.pause();
     let timers = GameTimers {
-        move_timer: Timer::from_seconds(1.2, TimerMode::Repeating),
+        move_timer: Timer::from_seconds(1.1, TimerMode::Repeating),
         drop_timer,
         hold_timer: Timer::from_seconds(0.1, TimerMode::Repeating),
         pressed_timer: Timer::from_seconds(0.05, TimerMode::Repeating),
@@ -125,7 +125,7 @@ fn setup(mut commands: Commands) {
 fn cleanup(mut commands: Commands, board_query: Query<Entity, With<board::Board>>) {
     commands.remove_resource::<BlocksInBoard>();
     commands.remove_resource::<MoveDirection>();
-    commands.remove_resource::<IsHolding>();
+    // commands.remove_resource::<IsHolding>();
     commands.remove_resource::<KeyHolds>();
     commands.remove_resource::<ShouldMerge>();
     commands.remove_resource::<RotateDirection>();
@@ -182,9 +182,12 @@ fn input_handler(
                     timers.hold_timer.reset();
                     timers.pressed_timer.reset();
                     *move_direction = MoveDirection::Right;
-                } else if !is_holding.right && timers.hold_timer.tick(time.delta()).just_finished() {
+                } else if !is_holding.right && timers.hold_timer.tick(time.delta()).just_finished()
+                {
                     is_holding.right = true;
-                } else if is_holding.right && timers.pressed_timer.tick(time.delta()).just_finished() {
+                } else if is_holding.right
+                    && timers.pressed_timer.tick(time.delta()).just_finished()
+                {
                     *move_direction = MoveDirection::Right;
                 }
             } else if keyboard_input.pressed(KeyCode::ArrowLeft) {
@@ -194,7 +197,8 @@ fn input_handler(
                     *move_direction = MoveDirection::Left;
                 } else if !is_holding.left && timers.hold_timer.tick(time.delta()).just_finished() {
                     is_holding.left = true;
-                } else if is_holding.left && timers.pressed_timer.tick(time.delta()).just_finished() {
+                } else if is_holding.left && timers.pressed_timer.tick(time.delta()).just_finished()
+                {
                     *move_direction = MoveDirection::Left;
                 }
             } else if keyboard_input.pressed(KeyCode::ArrowDown) {
@@ -204,7 +208,8 @@ fn input_handler(
                     *move_direction = MoveDirection::Down;
                 } else if !is_holding.down && timers.hold_timer.tick(time.delta()).just_finished() {
                     is_holding.down = true;
-                } else if is_holding.down && timers.pressed_timer.tick(time.delta()).just_finished() {
+                } else if is_holding.down && timers.pressed_timer.tick(time.delta()).just_finished()
+                {
                     *move_direction = MoveDirection::Down;
                 }
             } else {

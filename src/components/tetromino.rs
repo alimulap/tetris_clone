@@ -2,7 +2,10 @@ use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
     constants::{BOARD_BORDER_THICKNESS, TETROMINO_SIZE},
-    states::{game::{GameTimers, ShouldMerge}, AppState},
+    states::{
+        game::{GameTimers, ShouldMerge},
+        AppState,
+    },
     types::Position,
     utils::LayoutParse,
 };
@@ -63,11 +66,8 @@ pub fn spawn_tetromino(
                 tetromino,
                 pos,
                 index,
-                TransformBundle {
-                    local: Transform::from_translation(tetromino_position),
-                    global: GlobalTransform::default(),
-                },
-                VisibilityBundle::default(),
+                Transform::from_translation(tetromino_position),
+                InheritedVisibility::default(),
             ))
             .with_children(|parent| {
                 for (y, row) in layout.iter().enumerate() {
@@ -91,20 +91,17 @@ pub fn spawn_block(parent: &mut ChildBuilder, texture: Handle<Image>, x: usize, 
     parent.spawn((
         Block,
         pos,
-        SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(TETROMINO_SIZE),
-                anchor: Anchor::TopLeft,
-                ..Default::default()
-            },
-            transform: Transform::from_translation(Vec3 {
-                x: x as f32 * TETROMINO_SIZE.x,
-                y: y as f32 * -TETROMINO_SIZE.y,
-                z: 0.,
-            }),
-            texture,
+        Sprite {
+            custom_size: Some(TETROMINO_SIZE),
+            anchor: Anchor::TopLeft,
+            image: texture,
             ..Default::default()
         },
+        Transform::from_translation(Vec3 {
+            x: x as f32 * TETROMINO_SIZE.x,
+            y: y as f32 * -TETROMINO_SIZE.y,
+            z: 0.,
+        }),
     ));
 }
 

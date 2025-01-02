@@ -1,4 +1,9 @@
-use bevy::{prelude::*, app::{PluginGroupBuilder, AppExit}, window::WindowTheme};
+use bevy::{
+    app::{AppExit, PluginGroupBuilder},
+    prelude::*,
+    window::{SystemCursorIcon, WindowTheme},
+    winit::cursor::CursorIcon,
+};
 
 pub fn bevy_default_set() -> PluginGroupBuilder {
     DefaultPlugins.set(WindowPlugin {
@@ -19,25 +24,28 @@ pub fn bevy_default_set() -> PluginGroupBuilder {
 }
 
 pub fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d);
 }
 
 pub fn update(
+    mut commands: Commands,
+    window: Single<Entity, With<Window>>,
     buttons: Query<&Interaction>,
-    mut window: Query<&mut Window>,
 ) {
-    let mut window = window.single_mut();
     for buttons in buttons.iter() {
         if buttons.eq(&Interaction::Hovered) {
-            window.cursor.icon = CursorIcon::Pointer;
+            commands
+                .entity(*window)
+                .insert(CursorIcon::System(SystemCursorIcon::Pointer));
         } else {
-            window.cursor.icon = CursorIcon::Default;
+            commands
+                .entity(*window)
+                .insert(CursorIcon::System(SystemCursorIcon::Default));
         }
     }
 }
 
 pub fn close_on_q(
-    // mut commands: Commands,
     focused_windows: Query<(Entity, &Window)>,
     input: Res<ButtonInput<KeyCode>>,
     mut exit: EventWriter<AppExit>,
@@ -48,8 +56,7 @@ pub fn close_on_q(
         }
 
         if input.just_pressed(KeyCode::KeyQ) {
-            // commands.entity(window).despawn();
-            exit.send(AppExit);
+            exit.send(AppExit::Success);
         }
     }
 }

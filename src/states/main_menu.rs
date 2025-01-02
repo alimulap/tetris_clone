@@ -22,60 +22,56 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((
             MainMenu,
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..Default::default()
-                },
-                background_color: Color::rgb(0.15, 0.15, 0.15).into(),
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
+            BackgroundColor(Color::srgb(0.15, 0.15, 0.15)),
         ))
         .with_children(|parent| {
-            parent.spawn(
-                TextBundle::from_section(
-                    "MAIN MENU",
-                    TextStyle {
-                        font: asset_server.load("fonts/Montserrat-Regular.ttf"),
-                        font_size: 40.0,
-                        color: Color::WHITE,
-                    },
-                )
-                .with_text_justify(JustifyText::Center)
-                .with_style(Style {
+            parent.spawn((
+                Text(String::from("MAIN MENU")),
+                TextFont {
+                    font: asset_server.load("fonts/Montserrat-Regular.ttf"),
+                    font_size: 40.0,
+                    ..Default::default()
+                },
+                TextColor(Color::WHITE),
+                TextLayout::new_with_justify(JustifyText::Center),
+                Node {
                     margin: UiRect::all(Val::Px(15.0)),
                     ..Default::default()
-                }),
-            );
+                },
+            ));
             parent
                 .spawn((
                     StartGameButton,
-                    ButtonBundle {
-                        style: Style {
-                            width: Val::Px(155.0),
-                            height: Val::Px(35.0),
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            border: UiRect::all(Val::Px(1.0)),
-                            ..Default::default()
-                        },
-                        background_color: Color::rgb(0.3, 0.3, 0.3).into(),
-                        border_color: Color::rgb(0.8, 0.8, 0.8).into(),
+                    Button,
+                    Node {
+                        width: Val::Px(155.0),
+                        height: Val::Px(35.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        border: UiRect::all(Val::Px(1.0)),
                         ..Default::default()
                     },
+                    BackgroundColor(Color::srgb(0.3, 0.3, 0.3)),
+                    BorderColor(Color::srgb(0.8, 0.8, 0.8)),
+                    BorderRadius::all(Val::Px(5.0)),
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "START GAME",
-                        TextStyle {
+                    parent.spawn((
+                        Text(String::from("START GAME")),
+                        TextFont {
                             font: asset_server.load("fonts/Montserrat-Regular.ttf"),
-                            font_size: 23.0,
-                            color: Color::WHITE,
+                            font_size: 19.0,
+                            ..Default::default()
                         },
+                        TextColor(Color::WHITE),
                     ));
                 });
         });

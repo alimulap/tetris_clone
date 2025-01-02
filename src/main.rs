@@ -1,4 +1,4 @@
-use bevy::prelude::{App, Startup, Update};
+use bevy::prelude::{App, AppExtStates, Startup, Update};
 // use bevy_asset_loader::prelude::*;
 
 use bevy_asset_loader::loading_state::{
@@ -12,6 +12,7 @@ mod game;
 mod states;
 mod types;
 mod utils;
+mod window;
 
 fn main() {
     App::new()
@@ -30,7 +31,7 @@ fn main() {
         //.add_plugins(tetromino::TetrominoPlugin)
         .add_systems(Startup, game::setup)
         .add_systems(Update, game::update)
-        .add_systems(Update, bevy::window::close_on_esc)
+        // .add_systems(Update, window::close_on_q)
         .add_systems(Update, game::close_on_q)
         //.add_systems(Startup, state::main_menu::setup)
         .run();
