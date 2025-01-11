@@ -1,7 +1,7 @@
-use std::ops::{Deref, DerefMut, Add, AddAssign};
 use bevy::prelude::Component;
+use std::ops::{Add, AddAssign, Deref, DerefMut};
 
-use crate::{components::tetromino::{IndexLayout, ShouldHardDrop}, states::game::ShouldMerge};
+use crate::screens::ingame::ShouldMerge;
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct Position {
@@ -50,33 +50,6 @@ impl<'a> Add<&'a Position> for &'a Position {
     }
 }
 
-impl IndexLayout {
-    pub fn rotate(&mut self, direction: i8) {
-        let idx = **self;
-        if idx == 0 && direction == -1 {
-            **self = 3;
-        } else if idx == 3 && direction == 1 {
-            **self = 0;
-        } else {
-            **self = (idx as i8 + direction) as usize;
-        }
-    }
-}
-
-impl Deref for IndexLayout {
-    type Target = usize;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for IndexLayout {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl Deref for ShouldMerge {
     type Target = bool;
 
@@ -86,20 +59,6 @@ impl Deref for ShouldMerge {
 }
 
 impl DerefMut for ShouldMerge {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl Deref for ShouldHardDrop {
-    type Target = bool;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for ShouldHardDrop {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

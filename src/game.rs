@@ -23,26 +23,11 @@ pub fn bevy_default_set() -> PluginGroupBuilder {
     })
 }
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, window: Single<Entity, With<Window>>) {
     commands.spawn(Camera2d);
-}
-
-pub fn update(
-    mut commands: Commands,
-    window: Single<Entity, With<Window>>,
-    buttons: Query<&Interaction>,
-) {
-    for buttons in buttons.iter() {
-        if buttons.eq(&Interaction::Hovered) {
-            commands
-                .entity(*window)
-                .insert(CursorIcon::System(SystemCursorIcon::Pointer));
-        } else {
-            commands
-                .entity(*window)
-                .insert(CursorIcon::System(SystemCursorIcon::Default));
-        }
-    }
+    commands
+        .entity(*window)
+        .insert(CursorIcon::System(SystemCursorIcon::Default));
 }
 
 pub fn close_on_q(
